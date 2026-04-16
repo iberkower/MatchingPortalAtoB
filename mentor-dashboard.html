@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AtoB Startups - Mentor Dashboard</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body style="min-height: 100vh;">
+  
+  <header class="dashboard-header">
+    <a href="index.html" class="logo">AtoB Startups</a>
+    <div class="user-profile-nav">
+      First name Last name <span class="avatar-icon"></span>
+    </div>
+  </header>
+
+  <main style="max-width: 900px; margin: 0 auto; padding: 3rem 2rem;">
+    
+    <h1 style="font-size: 1.5rem; margin-bottom: 2rem;">Pending Mentee Requests</h1>
+
+    <div class="request-card new" style="position: relative;">
+      <div class="badge-new">NEW</div>
+      
+      <div class="match-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="match-avatar" style="width: 56px; height: 56px;"></div>
+        <div>
+          <h2 style="font-size: 1.125rem; margin-bottom: 0;">Anonymous Mentee</h2>
+          <span class="text-muted" style="font-size: 0.875rem;">Interested in connecting with you</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <div>
+          <div class="match-info-label">Industry</div>
+          <div class="match-info-value">Artificial Intelligence</div>
+        </div>
+        <div>
+          <div class="match-info-label">Stage</div>
+          <div class="match-info-value">MVP / Early Traction</div>
+        </div>
+        <div>
+          <div class="match-info-label">Location</div>
+          <div class="match-info-value">San Francisco, CA</div>
+        </div>
+        <div>
+          <div class="match-info-label">Looking For</div>
+          <div class="match-info-value">Product Strategy, Go-To-Market</div>
+        </div>
+        <div>
+          <div class="match-info-label">Meeting Preference</div>
+          <div class="match-info-value">Weekly, 45 min video calls</div>
+        </div>
+        <div>
+          <div class="match-info-label">3-Month Goal</div>
+          <div class="match-info-value">Launch first 100 customers</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1rem;">
+        <button class="btn btn-success" style="flex: 2;">✓ Accept &mdash; Reveal My Contact Info</button>
+        <button class="btn btn-danger-outline" style="flex: 1;">✕ Decline</button>
+        <a href="mentee-details.html" class="btn btn-outline" style="flex: 1;">More Info</a>
+      </div>
+    </div>
+
+
+    <h2 style="font-size: 1.125rem; color: var(--text-muted); margin-bottom: 1rem; margin-top: 4rem;">Past Requests</h2>
+    <div class="request-card" style="text-align: center; color: var(--text-muted); font-size: 0.875rem; padding: 2rem;">
+      No past requests yet.
+    </div>
+
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AtoB Startups - Sign Up</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="split-layout">
+    <div class="split-left">
+      <h1>Join AtoB<br>Startups</h1>
+      <p>Connect with the mentors<br>who will help your startup succeed.</p>
+    </div>
+    
+    <div class="split-right">
+      <div class="card" style="max-width: 500px;">
+        <h2 class="card-title">Create Your Account</h2>
+        <div style="margin-bottom: 2rem;">
+          <a href="login.html" style="font-size: 0.875rem;">Already have an account? Login &rarr;</a>
+        </div>
+        
+        <form>
+          <div class="form-group">
+            <label class="form-label" for="fullname">Full Name</label>
+            <input type="text" id="fullname" class="form-control" placeholder="e.g. John Doe" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="john.doe@gmail.com" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="Min. 8 characters" required>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 2rem;">
+            <label class="form-label" for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" class="form-control" placeholder="Repeat password" required>
+          </div>
+
+          <label class="form-label" style="margin-bottom: 1rem;">I am signing up as:</label>
+          <div class="role-toggle">
+            <a href="mentee-profile.html" class="btn btn-outline" style="border-width: 2px;">Mentee (Startup Founder)</a>
+            <a href="mentor-profile.html" class="btn btn-outline" style="border-width: 2px;">Mentor</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

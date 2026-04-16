@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AtoB Startups - Mentor Profile</title>
+  <link rel="stylesheet" href="index.css">
+  <script>
+    function togglePill(element) {
+      element.classList.toggle('active');
+    }
+  </script>
+</head>
+<body class="setup-layout">
+  
+  <header class="setup-header">
+    <a href="index.html" class="logo">AtoB Startups</a>
+    <div class="step-indicator">Step 2 of 2 &mdash; Complete Your Mentor Profile</div>
+  </header>
+
+  <main class="setup-content">
+    <div class="setup-card">
+      <h1 class="card-title">Mentor Profile</h1>
+      <p class="card-subtitle">Help us understand your background so we can match you with the right startup founders.</p>
+
+      <form action="index.html">
+        
+        <!-- About You -->
+        <h2 class="section-title">About You</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="fullname">Full Name</label>
+            <input type="text" id="fullname" class="form-control" placeholder="Your name">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="location">Location</label>
+            <input type="text" id="location" class="form-control" placeholder="City, State">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="linkedin">LinkedIn Profile URL</label>
+          <input type="url" id="linkedin" class="form-control" placeholder="https://linkedin.com/in/yourname">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="short-bio">Short Bio</label>
+          <textarea id="short-bio" class="form-control" placeholder="Brief professional summary (2-3 sentences)"></textarea>
+        </div>
+
+        <!-- Professional Experience -->
+        <h2 class="section-title">Professional Experience</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="industry">Primary Industry</label>
+            <select id="industry" class="form-control">
+              <option>Select industry</option>
+              <option>SaaS</option>
+              <option>E-commerce</option>
+              <option>Fintech</option>
+              <option>Healthtech</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="exp">Years of Experience</label>
+            <select id="exp" class="form-control">
+              <option>10-15 years</option>
+              <option>5-10 years</option>
+              <option>15+ years</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="companies">Notable Companies / Roles</label>
+          <input type="text" id="companies" class="form-control" placeholder="e.g. Google PM, Founder @ Acme (acquired), Partner @ a16z">
+        </div>
+
+        <!-- Skills & Mentorship Areas -->
+        <h2 class="section-title">Skills & Mentorship Areas</h2>
+        <label class="form-label">Skills You Can Offer (select all)</label>
+        <div class="pills-container">
+          <div class="pill" onclick="togglePill(this)">Fundraising</div>
+          <div class="pill active" onclick="togglePill(this)">Product Strategy</div>
+          <div class="pill" onclick="togglePill(this)">Growth</div>
+          <div class="pill" onclick="togglePill(this)">Sales</div>
+          <div class="pill" onclick="togglePill(this)">AI / ML</div>
+          <div class="pill" onclick="togglePill(this)">Marketing</div>
+          <div class="pill" onclick="togglePill(this)">Operations</div>
+          <div class="pill" onclick="togglePill(this)">Finance</div>
+        </div>
+
+        <label class="form-label">Startup Stages You Prefer to Mentor</label>
+        <div class="pills-container">
+          <div class="pill" onclick="togglePill(this)">Pre-idea</div>
+          <div class="pill active" onclick="togglePill(this)">Idea</div>
+          <div class="pill" onclick="togglePill(this)">MVP</div>
+          <div class="pill" onclick="togglePill(this)">Seed</div>
+          <div class="pill" onclick="togglePill(this)">Series A</div>
+        </div>
+
+        <!-- Availability & Preferences -->
+        <h2 class="section-title">Availability & Preferences</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="freq">Meeting Frequency</label>
+            <select id="freq" class="form-control">
+              <option>Weekly</option>
+              <option>Bi-weekly</option>
+              <option>Monthly</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="len">Session Length</label>
+            <select id="len" class="form-control">
+              <option>45 min</option>
+              <option>30 min</option>
+              <option>60 min</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="format">Meeting Format</label>
+            <select id="format" class="form-control">
+              <option>Video Call</option>
+              <option>Phone Call</option>
+              <option>In-person</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom: 2rem;">
+          <div class="form-group" style="flex: 0 0 30%;">
+            <label class="form-label" for="max">Max Active Mentees</label>
+            <select id="max" class="form-control">
+              <option>2 mentees</option>
+              <option>1 mentee</option>
+              <option>3+ mentees</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="lookfor">What You Look For in a Mentee</label>
+            <input type="text" id="lookfor" class="form-control" placeholder="Motivation, stage, industry focus, etc.">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Save Profile & Go to Dashboard</button>
+      </form>
+      
+    </div>
+  </main>
+</body>
+</html>
