@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,8 +12,9 @@
     }
   </script>
 </head>
+
 <body class="setup-layout">
-  
+
   <header class="setup-header">
     <a href="index.html" class="logo">AtoB Startups</a>
     <div class="step-indicator">Step 2 of 2 &mdash; Complete Your Mentor Profile</div>
@@ -21,10 +23,11 @@
   <main class="setup-content">
     <div class="setup-card">
       <h1 class="card-title">Mentor Profile</h1>
-      <p class="card-subtitle">Help us understand your background so we can match you with the right startup founders.</p>
+      <p class="card-subtitle">Help us understand your background so we can match you with the right startup founders.
+      </p>
 
       <form action="index.html">
-        
+
         <!-- About You -->
         <h2 class="section-title">About You</h2>
         <div class="form-row">
@@ -37,113 +40,109 @@
             <input type="text" id="location" class="form-control" placeholder="City, State">
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="linkedin">LinkedIn Profile URL</label>
-          <input type="url" id="linkedin" class="form-control" placeholder="https://linkedin.com/in/yourname">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="short-bio">Short Bio</label>
-          <textarea id="short-bio" class="form-control" placeholder="Brief professional summary (2-3 sentences)"></textarea>
-        </div>
-
-        <!-- Professional Experience -->
+        <!-- Professional Experience & Industry -->
         <h2 class="section-title">Professional Experience</h2>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="industry">Primary Industry</label>
-            <select id="industry" class="form-control">
-              <option>Select industry</option>
-              <option>SaaS</option>
-              <option>E-commerce</option>
-              <option>Fintech</option>
-              <option>Healthtech</option>
-              <option>Other</option>
-            </select>
+            <label class="form-label" for="linkedin">LinkedIn Profile URL</label>
+            <input type="url" id="linkedin" class="form-control" placeholder="https://linkedin.com/in/yourname">
           </div>
           <div class="form-group">
             <label class="form-label" for="exp">Years of Experience</label>
             <select id="exp" class="form-control">
-              <option>10-15 years</option>
               <option>5-10 years</option>
-              <option>15+ years</option>
+              <option>10-15 years</option>
+              <option>20+ years</option>
             </select>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label" for="companies">Notable Companies / Roles</label>
-          <input type="text" id="companies" class="form-control" placeholder="e.g. Google PM, Founder @ Acme (acquired), Partner @ a16z">
+          <input type="text" id="companies" class="form-control"
+            placeholder="e.g. Google PM, Founder @ Acme (acquired), Partner @ a16z">
         </div>
 
-        <!-- Skills & Mentorship Areas -->
-        <h2 class="section-title">Skills & Mentorship Areas</h2>
-        <label class="form-label">Skills You Can Offer (select all)</label>
+        <label class="form-label">Industries You Have Deep Experience In</label>
         <div class="pills-container">
-          <div class="pill" onclick="togglePill(this)">Fundraising</div>
-          <div class="pill active" onclick="togglePill(this)">Product Strategy</div>
-          <div class="pill" onclick="togglePill(this)">Growth</div>
-          <div class="pill" onclick="togglePill(this)">Sales</div>
-          <div class="pill" onclick="togglePill(this)">AI / ML</div>
-          <div class="pill" onclick="togglePill(this)">Marketing</div>
-          <div class="pill" onclick="togglePill(this)">Operations</div>
-          <div class="pill" onclick="togglePill(this)">Finance</div>
+          <div class="pill" onclick="togglePill(this)">SaaS / Enterprise Software</div>
+          <div class="pill" onclick="togglePill(this)">Consumer / E-commerce</div>
+          <div class="pill" onclick="togglePill(this)">Fintech</div>
+          <div class="pill" onclick="togglePill(this)">Healthtech / Biotech</div>
+          <div class="pill" onclick="togglePill(this)">AI / Machine Learning</div>
+          <div class="pill" onclick="togglePill(this)">Marketplaces</div>
+          <div class="pill" onclick="togglePill(this)">Hardware / IoT</div>
+          <div class="pill" onclick="togglePill(this)">AdTech / MarTech</div>
+          <div class="pill" onclick="togglePill(this)">Crypto / Web3</div>
         </div>
 
-        <label class="form-label">Startup Stages You Prefer to Mentor</label>
+        <!-- Startup Stages -->
+        <h2 class="section-title">Startup Stages</h2>
+        <label class="form-label">Which stages can you mentor? (select all that apply)</label>
         <div class="pills-container">
-          <div class="pill" onclick="togglePill(this)">Pre-idea</div>
-          <div class="pill active" onclick="togglePill(this)">Idea</div>
-          <div class="pill" onclick="togglePill(this)">MVP</div>
-          <div class="pill" onclick="togglePill(this)">Seed</div>
-          <div class="pill" onclick="togglePill(this)">Series A</div>
+          <div class="pill" onclick="togglePill(this)">Ideation (problem & customer validation)</div>
+          <div class="pill" onclick="togglePill(this)">MVP built (pre-users)</div>
+          <div class="pill" onclick="togglePill(this)">Early users / pilots</div>
+          <div class="pill" onclick="togglePill(this)">Early revenue / traction</div>
+          <div class="pill" onclick="togglePill(this)">Preparing for pre-seed</div>
+          <div class="pill" onclick="togglePill(this)">Actively bootstrapping GTM</div>
         </div>
 
-        <!-- Availability & Preferences -->
-        <h2 class="section-title">Availability & Preferences</h2>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="freq">Meeting Frequency</label>
-            <select id="freq" class="form-control">
-              <option>Weekly</option>
-              <option>Bi-weekly</option>
-              <option>Monthly</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="len">Session Length</label>
-            <select id="len" class="form-control">
-              <option>45 min</option>
-              <option>30 min</option>
-              <option>60 min</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="format">Meeting Format</label>
-            <select id="format" class="form-control">
-              <option>Video Call</option>
-              <option>Phone Call</option>
-              <option>In-person</option>
-            </select>
-          </div>
+        <!-- Expertise & Decision Support -->
+        <h2 class="section-title">Expertise & Decision Support</h2>
+        <label class="form-label">Which of these key decisions can you help founders navigate?</label>
+        <div class="pills-container">
+          <div class="pill" onclick="togglePill(this)">Identifying the real customer</div>
+          <div class="pill" onclick="togglePill(this)">Narrowing the problem focus</div>
+          <div class="pill" onclick="togglePill(this)">MVP scope (what to build vs. cut)</div>
+          <div class="pill" onclick="togglePill(this)">Early GTM & sales execution</div>
+          <div class="pill" onclick="togglePill(this)">Pricing & monetization</div>
+          <div class="pill" onclick="togglePill(this)">Fundraising readiness & milestones</div>
+          <div class="pill" onclick="togglePill(this)">Hiring / team structure</div>
+          <div class="pill" onclick="togglePill(this)">Partnerships or pilots</div>
+          <div class="pill" onclick="togglePill(this)">Regulatory / legal constraints</div>
+          <div class="pill" onclick="togglePill(this)">Diagnosing startup challenges</div>
         </div>
-        <div class="form-row" style="margin-bottom: 2rem;">
+
+        <label class="form-label">Where would your targeted mentorship help most?</label>
+        <div class="pills-container">
+          <div class="pill" onclick="togglePill(this)">Customer discovery & ICP clarity</div>
+          <div class="pill" onclick="togglePill(this)">Product scope & MVP decisions</div>
+          <div class="pill" onclick="togglePill(this)">Technical architecture / build tradeoffs</div>
+          <div class="pill" onclick="togglePill(this)">Early GTM & sales execution</div>
+          <div class="pill" onclick="togglePill(this)">Hiring & team formation</div>
+          <div class="pill" onclick="togglePill(this)">Fundraising prep & narrative</div>
+        </div>
+
+        <!-- Engagement Style -->
+        <h2 class="section-title">Availability & Engagement Style</h2>
+        <label class="form-label">What kind of mentor interaction are you open to?</label>
+        <div class="pills-container">
+          <div class="pill" onclick="togglePill(this)">Single tactical gut-check (30-60 min)</div>
+          <div class="pill" onclick="togglePill(this)">2-3 sessions to iterate on a specific deliverable</div>
+          <div class="pill" onclick="togglePill(this)">Ongoing monthly check-ins for accountability</div>
+        </div>
+
+        <div class="form-row" style="margin-top: 1.5rem; margin-bottom: 2rem;">
           <div class="form-group" style="flex: 0 0 30%;">
             <label class="form-label" for="max">Max Active Mentees</label>
             <select id="max" class="form-control">
-              <option>2 mentees</option>
               <option>1 mentee</option>
+              <option>2 mentees</option>
               <option>3+ mentees</option>
             </select>
           </div>
           <div class="form-group">
             <label class="form-label" for="lookfor">What You Look For in a Mentee</label>
-            <input type="text" id="lookfor" class="form-control" placeholder="Motivation, stage, industry focus, etc.">
+            <input type="text" id="lookfor" class="form-control"
+              placeholder="Motivation, specific coachability, industry interest, etc.">
           </div>
         </div>
 
         <button type="submit" class="btn btn-primary btn-block">Save Profile & Go to Dashboard</button>
       </form>
-      
+
     </div>
   </main>
 </body>
+
 </html>

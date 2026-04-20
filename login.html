@@ -1,37 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AtoB Startups - Login</title>
   <link rel="stylesheet" href="index.css">
 </head>
+
 <body>
   <div class="split-layout">
     <div class="split-left">
       <h1>Log in to AtoB<br>Startups</h1>
       <p>Connect with the mentors<br>who will help your startup succeed.</p>
     </div>
-    
+
     <div class="split-right">
       <div class="card">
         <h2 class="card-title">Log in</h2>
-        
+
         <form action="index.html" style="margin-top: 2rem;">
           <div class="form-group">
             <label class="form-label" for="email">Email Address</label>
             <input type="email" id="email" class="form-control" placeholder="john.doe@gmail.com" required>
           </div>
-          
+
           <div class="form-group" style="margin-bottom: 2rem;">
-            <label class="form-label" for="password">Password</label>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="form-label" for="password">Password</label>
+              <a href="forgot-password.html" style="font-size: 0.75rem; font-weight: 500; margin-bottom: 0.5rem;">Forgot
+                password?</a>
+            </div>
             <input type="password" id="password" class="form-control" placeholder="Min. 8 characters" required>
           </div>
-          
+
           <button type="submit" class="btn btn-primary btn-block">Log in</button>
         </form>
+
+        <div style="margin-top: 2rem; text-align: center; font-size: 0.875rem; color: var(--text-muted);">
+          Don't have an account? <a href="signup.html" style="font-weight: 600;">Sign up</a>
+        </div>
       </div>
     </div>
   </div>
 </body>
+
 </html>
