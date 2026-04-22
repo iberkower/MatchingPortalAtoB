@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtoBe Startups - Profile Settings</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body class="setup-layout">
+
+    <header class="setup-header">
+        <a href="index.html" class="logo">AtoBe Startups</a>
+        <div class="user-profile-nav">
+            <!-- Will be populated by auth-shared.js -->
+        </div>
+    </header>
+
+    <main class="setup-content">
+        <div class="setup-card">
+            <h1 class="card-title">Profile Settings</h1>
+            <p class="card-subtitle">Manage your account information and mentorship preferences.</p>
+
+            <form id="settingsForm">
+                <h2 class="section-title">Account Access</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="email" class="form-control" placeholder="Update email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" id="password" class="form-control"
+                            placeholder="Leave blank to keep current">
+                    </div>
+                </div>
+
+                <div id="dynamicFields">
+                    <!-- Mentor or Mentee specific fields will be injected here -->
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        Loading your profile...
+                    </div>
+                </div>
+
+                <div style="margin-top: 3rem; display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 2;">Save Changes</button>
+                    <a href="index.html" id="backBtn" class="btn btn-outline" style="flex: 1;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="auth-shared.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('atobeToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/profile/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const { user, profile } = data;
+
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('backBtn').href = user.role === 'mentor' ? 'mentor-dashboard.html' : 'mentor-matches.html';
+
+                    const container = document.getElementById('dynamicFields');
+                    if (user.role === 'mentor') {
+                        renderMentorFields(container, profile);
+                    } else {
+                        renderMenteeFields(container, profile);
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        function renderMentorFields(container, profile) {
+            container.innerHTML = `
+            <h2 class="section-title">Mentor Profile</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="full_name" class="form-control" value="${profile?.full_name || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Current Role</label>
+                    <input type="text" id="current_role" class="form-control" value="${profile?.current_role || ''}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Company</label>
+                <input type="text" id="company" class="form-control" value="${profile?.company || ''}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">LinkedIn URL</label>
+                <input type="url" id="linkedin_url" class="form-control" value="${profile?.linkedin_url || ''}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Past Startups Founded</label>
+                <input type="text" id="past_startups" class="form-control" value="${profile?.past_startups || ''}">
+            </div>
+        `;
+        }
+
+        function renderMenteeFields(container, profile) {
+            container.innerHTML = `
+            <h2 class="section-title">Startup Profile</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Startup Name</label>
+                    <input type="text" id="startup_name" class="form-control" value="${profile?.startup_name || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Founders</label>
+                    <input type="text" id="founders" class="form-control" value="${profile?.founders || ''}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Current Stage</label>
+                <select id="current_stage" class="form-control">
+                    <option value="">Select Stage</option>
+                    <option value="Ideation (problem & customer still being validated)" ${profile?.current_stage === 'Ideation (problem & customer still being validated)' ? 'selected' : ''}>Ideation (problem & customer still being validated)</option>
+                    <option value="MVP built, no real users yet" ${profile?.current_stage === 'MVP built, no real users yet' ? 'selected' : ''}>MVP built, no real users yet</option>
+                    <option value="Early users / pilots" ${profile?.current_stage === 'Early users / pilots' ? 'selected' : ''}>Early users / pilots</option>
+                    <option value="Early revenue / traction" ${profile?.current_stage === 'Early revenue / traction' ? 'selected' : ''}>Early revenue / traction</option>
+                    <option value="Preparing for pre-seed" ${profile?.current_stage === 'Preparing for pre-seed' ? 'selected' : ''}>Preparing for pre-seed</option>
+                    <option value="Actively bootstrapping GTM" ${profile?.current_stage === 'Actively bootstrapping GTM' ? 'selected' : ''}>Actively bootstrapping GTM</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Main Business Constraint</label>
+                <textarea id="constraints" class="form-control" style="min-height: 100px;">${profile?.constraints || ''}</textarea>
+            </div>
+        `;
+        }
+
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('atobeToken');
+
+            const inputs = document.querySelectorAll('#settingsForm input, #settingsForm textarea, #settingsForm select');
+            const data = {};
+            inputs.forEach(input => {
+                if (input.value) data[input.id] = input.value;
+            });
+
+            try {
+                const response = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('Profile updated successfully!');
+                    window.location.reload();
+                } else {
+                    alert('Failed to update profile');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+
+</html>

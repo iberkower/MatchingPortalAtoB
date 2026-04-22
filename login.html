@@ -4,14 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AtoB Startups - Login</title>
+  <title>AtoBe Startups - Login</title>
   <link rel="stylesheet" href="index.css">
 </head>
 
 <body>
   <div class="split-layout">
     <div class="split-left">
-      <h1>Log in to AtoB<br>Startups</h1>
+      <h1>Log in to AtoBe<br>Startups</h1>
       <p>Connect with the mentors<br>who will help your startup succeed.</p>
     </div>
 
@@ -19,13 +19,13 @@
       <div class="card">
         <h2 class="card-title">Log in</h2>
 
-        <form action="index.html" style="margin-top: 2rem;">
+        <form style="margin-top: 2rem;" id="loginForm">
           <div class="form-group">
             <label class="form-label" for="email">Email Address</label>
             <input type="email" id="email" class="form-control" placeholder="john.doe@gmail.com" required>
           </div>
 
-          <div class="form-group" style="margin-bottom: 2rem;">
+          <div class="form-group" style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <label class="form-label" for="password">Password</label>
               <a href="forgot-password.html" style="font-size: 0.75rem; font-weight: 500; margin-bottom: 0.5rem;">Forgot
@@ -36,6 +36,40 @@
 
           <button type="submit" class="btn btn-primary btn-block">Log in</button>
         </form>
+
+        <script>
+          document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+              const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                localStorage.setItem('atobeToken', result.token);
+                localStorage.setItem('atobeRole', result.role);
+                localStorage.setItem('atobeUser', JSON.stringify({ email, role: result.role }));
+
+                if (result.role === 'mentor') {
+                  window.location.href = 'mentor-dashboard.html';
+                } else {
+                  window.location.href = 'mentor-matches.html';
+                }
+              } else {
+                const err = await response.json();
+                alert(err.error || 'Login failed');
+              }
+            } catch (err) {
+              alert('Could not connect to server. Make sure it is running.');
+            }
+          });
+        </script>
 
         <div style="margin-top: 2rem; text-align: center; font-size: 0.875rem; color: var(--text-muted);">
           Don't have an account? <a href="signup.html" style="font-weight: 600;">Sign up</a>

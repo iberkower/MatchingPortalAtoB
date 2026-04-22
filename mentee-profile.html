@@ -1,160 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AtoB Startups - Mentee Profile</title>
+  <title>AtoBe Startups - Mentee Profile Setup</title>
   <link rel="stylesheet" href="index.css">
   <script>
-    function togglePill(element) {
-      element.classList.toggle('active');
+    function togglePill(element, max = null) {
+      if (!element.classList.contains('active')) {
+        if (max) {
+          const container = element.parentElement;
+          const activeCount = container.querySelectorAll('.pill.active').length;
+          if (activeCount >= max) {
+            alert('Please select at most ' + max + ' options.');
+            return;
+          }
+        }
+        element.classList.add('active');
+      } else {
+        element.classList.remove('active');
+      }
+    }
+
+    function selectRadioPill(element, name) {
+      const parent = element.parentElement;
+      parent.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      element.classList.add('active');
     }
   </script>
 </head>
+
 <body class="setup-layout">
-  
+
   <header class="setup-header">
-    <a href="index.html" class="logo">AtoB Startups</a>
-    <div class="step-indicator">Step 2 of 2 &mdash; Complete Your Mentee Profile</div>
+    <a href="index.html" class="logo">AtoBe Startups</a>
+    <div class="step-indicator">Step 2 of 2 &mdash; Match Request</div>
   </header>
 
   <main class="setup-content">
     <div class="setup-card">
-      <h1 class="card-title">Mentee Profile</h1>
-      <p class="card-subtitle">Tell us about yourself and your startup so we can find the best mentors for you.</p>
+      <h1 class="card-title">Mentor Matching Request</h1>
+      <p class="card-subtitle">This form helps the AtoBe team understand where your startup is currently blocked and what
+        kind of mentorship would materially help you move forward.</p>
 
-      <form action="index.html">
-        
-        <!-- About You -->
-        <h2 class="section-title">About You</h2>
+      <form action="mentor-matches.html">
+
+        <!-- Section 1: Founders & Startup Info -->
+        <h2 class="section-title">Founders & Startup</h2>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="fullname">Full Name</label>
-            <input type="text" id="fullname" class="form-control" placeholder="Your name">
+            <label class="form-label" for="startup-name">1. Startup Name</label>
+            <input type="text" id="startup-name" class="form-control" placeholder="The name of your company" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="location">Location</label>
-            <input type="text" id="location" class="form-control" placeholder="City, State">
+            <label class="form-label" for="founders">2. Founders Completing This Form</label>
+            <input type="text" id="founders" class="form-control" placeholder="Names of founders filling this out"
+              required>
           </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="linkedin">LinkedIn Profile URL</label>
-          <input type="url" id="linkedin" class="form-control" placeholder="https://linkedin.com/in/yourname">
         </div>
 
-        <!-- Your Startup -->
-        <h2 class="section-title">Your Startup</h2>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="startup-name">Startup Name</label>
-            <input type="text" id="startup-name" class="form-control" placeholder="What is your company called?">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="startup-stage">Startup Stage</label>
-            <select id="startup-stage" class="form-control">
-              <option>Idea Stage</option>
-              <option>MVP</option>
-              <option>Seed/Early Revenue</option>
-              <option>Growth</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="industry">Primary Industry</label>
-            <select id="industry" class="form-control">
-              <option>Select industry</option>
-              <option>SaaS</option>
-              <option>E-commerce</option>
-              <option>Fintech</option>
-              <option>Healthtech</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="model">Business Model</label>
-            <select id="model" class="form-control">
-              <option>Select model (B2B, B2C...)</option>
-              <option>B2B</option>
-              <option>B2C</option>
-              <option>Marketplace</option>
-              <option>Hardware</option>
-            </select>
-          </div>
-        </div>
         <div class="form-group">
-          <label class="form-label" for="idea-desc">Describe Your Startup Idea</label>
-          <textarea id="idea-desc" class="form-control" placeholder="What problem are you solving? Who is your target customer?"></textarea>
+          <label class="form-label">3. Current Stage (choose one)</label>
+          <div class="pills-container">
+            <div class="pill" onclick="selectRadioPill(this, 'stage')">Ideation (problem & customer still being
+              validated)</div>
+            <div class="pill" onclick="selectRadioPill(this, 'stage')">MVP built, no real users yet</div>
+            <div class="pill" onclick="selectRadioPill(this, 'stage')">Early users / pilots</div>
+            <div class="pill" onclick="selectRadioPill(this, 'stage')">Early revenue / traction</div>
+            <div class="pill" onclick="selectRadioPill(this, 'stage')">Preparing for pre-seed</div>
+            <div class="pill" onclick="selectRadioPill(this, 'stage')">Actively bootstrapping GTM</div>
+          </div>
         </div>
 
-        <!-- Needs -->
-        <h2 class="section-title">What You Need from a Mentor</h2>
-        <label class="form-label">Skills Needed (select all that apply)</label>
-        <div class="pills-container">
-          <div class="pill active" onclick="togglePill(this)">AI / ML</div>
-          <div class="pill" onclick="togglePill(this)">Marketing</div>
-          <div class="pill" onclick="togglePill(this)">Fundraising</div>
-          <div class="pill" onclick="togglePill(this)">Product</div>
-          <div class="pill" onclick="togglePill(this)">Sales</div>
-          <div class="pill" onclick="togglePill(this)">Finance</div>
-          <div class="pill" onclick="togglePill(this)">Legal</div>
-          <div class="pill" onclick="togglePill(this)">Operations</div>
-        </div>
-        
+        <!-- Section 2: The Core Problem -->
+        <h2 class="section-title">The Core Problem</h2>
+
         <div class="form-group">
-          <label class="form-label" for="challenge">Biggest Current Challenge</label>
-          <textarea id="challenge" class="form-control" placeholder="e.g. Finding product-market fit, building my team..."></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="action-taken">Have you already taken action on this issue?</label>
-          <textarea id="action-taken" class="form-control" placeholder="e.g. Finding product-market fit, building my team..."></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="success">What would success look like from a mentor?</label>
-          <textarea id="success" class="form-control" placeholder="e.g. Finding product-market fit, building my team..."></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="help-match">Anything else that would help us match you correctly?</label>
-          <textarea id="help-match" class="form-control" placeholder="e.g. Finding product-market fit, building my team..."></textarea>
+          <label class="form-label">4. What is the main decision you are currently stuck on? (Choose closest)</label>
+          <div class="pills-container">
+            <div class="pill" onclick="selectRadioPill(this, 'decision')">Who the real customer is</div>
+            <div class="pill" onclick="selectRadioPill(this, 'decision')">What problem to focus on (narrowing)</div>
+            <div class="pill" onclick="selectRadioPill(this, 'decision')">What to build vs. cut in the MVP</div>
+            <div class="pill" onclick="selectRadioPill(this, 'decision')">How to reach first users / customers</div>
+            <div class="pill" onclick="selectRadioPill(this, 'decision')">Pricing or monetization approach</div>
+            <div class="pill" onclick="selectRadioPill(this, 'decision')">Whether fundraising makes sense now</div>
+            <div class="pill" onclick="selectRadioPill(this, 'decision')">How to structure the founding team / roles
+            </div>
+            <div class="pill" onclick="selectRadioPill(this, 'decision')">Technical architecture or build direction
+            </div>
+            <div class="pill" onclick="selectRadioPill(this, 'decision')">Other</div>
+          </div>
         </div>
 
-        <!-- Mentor Preferences -->
-        <h2 class="section-title">Mentor Preferences</h2>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="freq">Preferred Meeting Frequency</label>
-            <select id="freq" class="form-control">
-              <option>Weekly</option>
-              <option>Bi-weekly</option>
-              <option>Monthly</option>
-            </select>
+        <div class="form-group">
+          <label class="form-label">5. Where would targeted mentorship help most right now? (Select at most 2)</label>
+          <div class="pills-container">
+            <div class="pill" onclick="togglePill(this, 2)">Customer discovery & ICP clarity</div>
+            <div class="pill" onclick="togglePill(this, 2)">Product scope & MVP decisions</div>
+            <div class="pill" onclick="togglePill(this, 2)">Technical architecture / build tradeoffs</div>
+            <div class="pill" onclick="togglePill(this, 2)">Early GTM & sales execution</div>
+            <div class="pill" onclick="togglePill(this, 2)">Pricing & monetization</div>
+            <div class="pill" onclick="togglePill(this, 2)">Fundraising readiness & milestones</div>
+            <div class="pill" onclick="togglePill(this, 2)">Hiring / team structure</div>
+            <div class="pill" onclick="togglePill(this, 2)">Partnerships or pilots</div>
+            <div class="pill" onclick="togglePill(this, 2)">Regulatory / legal constraints</div>
+            <div class="pill" onclick="togglePill(this, 2)">Not sure — need help diagnosing</div>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="len">Session Length</label>
-            <select id="len" class="form-control">
-              <option>30 min</option>
-              <option>45 min</option>
-              <option>60 min</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="format">Meeting Format</label>
-            <select id="format" class="form-control">
-              <option>Video Call</option>
-              <option>Phone Call</option>
-              <option>In-person</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom: 2rem;">
-          <label class="form-label" for="goals">Goals for This Mentorship</label>
-          <textarea id="goals" class="form-control" placeholder="e.g. Finding product-market fit, building my team..."></textarea>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block">Save Profile & Find Mentors</button>
+        <div class="form-group">
+          <label class="form-label" for="success">6. What would “success” from a mentor conversation look like?</label>
+          <textarea id="success" class="form-control"
+            placeholder="e.g. 'A clear plan for our first 10 customer interviews' or 'Confidence in our tech stack choices'"
+            style="min-height: 100px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">7. Have you already taken action on this issue?</label>
+          <div class="pills-container">
+            <div class="pill" onclick="selectRadioPill(this, 'action')">Yes, and we’re stuck</div>
+            <div class="pill" onclick="selectRadioPill(this, 'action')">Yes, but results are unclear</div>
+            <div class="pill" onclick="selectRadioPill(this, 'action')">Not yet: need direction first</div>
+          </div>
+        </div>
+
+        <!-- Section 3: Mentor Interaction -->
+        <h2 class="section-title">Mentor Interaction</h2>
+
+        <div class="form-group">
+          <label class="form-label">8. What kind of mentor interaction would be most useful?</label>
+          <div class="pills-container">
+            <div class="pill" onclick="selectRadioPill(this, 'interaction')">One focused 1:1 conversation</div>
+            <div class="pill" onclick="selectRadioPill(this, 'interaction')">A short series (2–3 sessions)</div>
+            <div class="pill" onclick="selectRadioPill(this, 'interaction')">Async feedback on a doc or deck</div>
+            <div class="pill" onclick="selectRadioPill(this, 'interaction')">Intros are useful after guidance</div>
+            <div class="pill" onclick="selectRadioPill(this, 'interaction')">Not sure: open to suggestion</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="constraints">9. Any constraints we should know about? (Timeline, Tech stack,
+            etc.)</label>
+          <textarea id="constraints" class="form-control"
+            placeholder="e.g. 'Need a decision by Friday' or 'Only looking for Node.js experience'"
+            style="min-height: 80px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="extra">10. Anything else that would help us match you correctly?</label>
+          <textarea id="extra" class="form-control"
+            placeholder="Any context on the industry, your background, or specific mentor profiles you admire."
+            style="min-height: 100px;"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 2rem; padding: 1.25rem;">Submit
+          Request & Find Mentors</button>
       </form>
-      
+
     </div>
   </main>
+  <script>
+    document.querySelector('form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const token = localStorage.getItem('atobeToken');
+      if (!token) {
+        alert('You must be logged in to submit a request.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const formData = {
+        startup_name: document.getElementById('startup-name').value,
+        founders: document.getElementById('founders').value,
+        current_stage: Array.from(document.querySelectorAll('.form-group')).find(g => g.innerHTML.includes('Current Stage'))?.querySelector('.pill.active')?.textContent || '',
+        main_decision: Array.from(document.querySelectorAll('.form-group')).find(g => g.innerHTML.includes('main decision'))?.querySelector('.pill.active')?.textContent || '',
+        help_areas: Array.from(document.querySelectorAll('.form-group')).find(g => g.innerHTML.includes('mentorship help most'))?.querySelectorAll('.pill.active') ? Array.from(Array.from(document.querySelectorAll('.form-group')).find(g => g.innerHTML.includes('mentorship help most')).querySelectorAll('.pill.active')).map(p => p.textContent) : [],
+        success_definition: document.getElementById('success').value,
+        taken_action: Array.from(document.querySelectorAll('.form-group')).find(g => g.innerHTML.includes('taken action'))?.querySelector('.pill.active')?.textContent || '',
+        interaction_style: Array.from(document.querySelectorAll('.form-group')).find(g => g.innerHTML.includes('interaction would be most useful'))?.querySelector('.pill.active')?.textContent || '',
+        constraints: document.getElementById('constraints').value,
+        extra_info: document.getElementById('extra').value
+      };
+
+      try {
+        const response = await fetch('/api/profile/mentee', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          window.location.href = 'mentor-matches.html';
+        } else {
+          alert('Failed to save request');
+        }
+      } catch (err) {
+        alert('Error connecting to server');
+      }
+    });
+  </script>
 </body>
+
 </html>

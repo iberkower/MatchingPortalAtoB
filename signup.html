@@ -4,14 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AtoB Startups - Sign Up</title>
+  <title>AtoBe Startups - Sign Up</title>
   <link rel="stylesheet" href="index.css">
 </head>
 
 <body>
   <div class="split-layout">
     <div class="split-left">
-      <h1>Join AtoB<br>Startups</h1>
+      <h1>Join AtoBe<br>Startups</h1>
       <p>Connect with the mentors<br>who will help your startup succeed.</p>
     </div>
 
@@ -22,7 +22,7 @@
           <a href="login.html" style="font-size: 0.875rem;">Already have an account? Login &rarr;</a>
         </div>
 
-        <form>
+        <form id="signupForm">
           <div class="form-group">
             <label class="form-label" for="fullname">Full Name</label>
             <input type="text" id="fullname" class="form-control" placeholder="e.g. John Doe" required>
@@ -45,13 +45,60 @@
 
           <label class="form-label" style="margin-bottom: 1rem;">I am signing up as:</label>
           <div class="role-toggle">
-            <a href="mentee-profile.html" class="btn btn-outline"
+            <button type="button" onclick="handleSignup('mentee')" class="btn btn-outline"
               style="border-width: 2px; display: flex; align-items: center; justify-content: center; flex: 1; min-height: 5rem; padding: 1rem; text-align: center;">Mentee<br>(Startup
-              Founder)</a>
-            <a href="mentor-profile.html" class="btn btn-outline"
-              style="border-width: 2px; display: flex; align-items: center; justify-content: center; flex: 1; min-height: 5rem; padding: 1rem; text-align: center;">Mentor</a>
+              Founder)</button>
+            <button type="button" onclick="handleSignup('mentor')" class="btn btn-outline"
+              style="border-width: 2px; display: flex; align-items: center; justify-content: center; flex: 1; min-height: 5rem; padding: 1rem; text-align: center;">Mentor</button>
           </div>
         </form>
+
+        <script>
+          async function handleSignup(role) {
+            const form = document.getElementById('signupForm');
+            if (!form.checkValidity()) {
+              form.reportValidity();
+              return;
+            }
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (password !== confirmPassword) {
+              alert("Passwords do not match!");
+              return;
+            }
+
+            const data = {
+              email: document.getElementById('email').value,
+              password: password,
+              role: role,
+              fullname: document.getElementById('fullname').value
+            };
+
+            try {
+              const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                localStorage.setItem('atobeToken', result.token);
+                localStorage.setItem('atobeRole', result.role);
+                localStorage.setItem('atobeUser', JSON.stringify({ email: data.email, role: data.role, fullname: data.fullname }));
+
+                window.location.href = role === 'mentor' ? 'mentor-profile.html' : 'mentee-profile.html';
+              } else {
+                const err = await response.json();
+                alert(err.error || 'Signup failed');
+              }
+            } catch (err) {
+              alert('Could not connect to server. Make sure it is running.');
+            }
+          }
+        </script>
       </div>
     </div>
   </div>
