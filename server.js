@@ -1,3 +1,12 @@
+require('dotenv').config();
+const {
+  sendWelcomeEmail,
+  sendMatchConfirmedEmail,
+  sendMentorAcceptedEmail,
+  sendMentorDeclinedEmail,
+  sendMatchDissolvedEmail,
+} = require('./email');
+
 const express = require('express');
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
@@ -88,6 +97,7 @@ app.post('/api/signup', async (req, res) => {
         const insert = db.prepare('INSERT INTO users (email, password, role) VALUES (?, ?, ?)');
         const result = insert.run(email, hashedPassword, role);
         const token = jwt.sign({ id: result.lastInsertRowid, email, role }, SECRET_KEY);
+        sendWelcomeEmail(email, role).catch(err => console.error('Welcome email failed:', err));
         res.json({ token, role, userId: result.lastInsertRowid });
     } catch (err) {
         if (err.message.includes('UNIQUE constraint failed')) {
