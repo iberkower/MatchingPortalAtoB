@@ -71,6 +71,17 @@ db.exec(`
     extra_info TEXT,
     FOREIGN KEY(user_id) REFERENCES users(id)
   );
+
+  CREATE TABLE IF NOT EXISTS matches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mentee_id INTEGER,
+    mentor_id INTEGER,
+    status TEXT DEFAULT 'pending',
+    confirmed_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(mentee_id) REFERENCES users(id),
+    FOREIGN KEY(mentor_id) REFERENCES users(id)
+  );
 `);
 
 // Auth Middleware
@@ -236,6 +247,127 @@ app.post('/api/profile/update', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Update failed: ' + err.message });
     }
 });
+
+app.post('/api/matches/confirm', authenticateToken, (req, res) => {
+    const { mentor_id } = req.body;
+
+    // Block if mentee already has an active match
+    const existing = db.prepare(
+        `SELECT * FROM matches WHERE mentee_id = ? AND status != 'declined'`
+    ).get(req.user.id);
+    if (existing) return res.status(400).json({ error: 'You already have an active match' });
+
+    // Insert the match as pending (waiting for mentor to accept)
+    const result = db.prepare(
+        `INSERT INTO matches (mentee_id, mentor_id, status) VALUES (?, ?, 'pending')`
+    ).run(req.user.id, mentor_id);
+
+    // Get emails for both parties
+    const menteeUser = db.prepare('SELECT email FROM users WHERE id = ?').get(req.user.id);
+    const mentorUser = db.prepare('SELECT email FROM users WHERE id = ?').get(mentor_id);
+    const mentorProfile = db.prepare('SELECT full_name FROM mentor_profiles WHERE user_id = ?').get(mentor_id);
+
+    sendMatchConfirmedEmail(menteeUser.email, mentorUser.email, mentorProfile?.full_name || 'Your Mentor')
+        .catch(err => console.error('Match confirm email failed:', err));
+
+    res.json({ success: true, matchId: result.lastInsertRowid });
+});
+
+app.post('/api/matches/accept', authenticateToken, (req, res) => {
+    const { match_id } = req.body;
+
+    // Make sure this match actually belongs to this mentor
+    const match = db.prepare(
+        `SELECT * FROM matches WHERE id = ? AND mentor_id = ?`
+    ).get(match_id, req.user.id);
+    if (!match) return res.status(404).json({ error: 'Match not found' });
+
+    db.prepare(
+        `UPDATE matches SET status = 'confirmed', confirmed_at = CURRENT_TIMESTAMP WHERE id = ?`
+    ).run(match_id);
+
+    // Get mentee email + mentor profile for the email
+    const menteeUser = db.prepare('SELECT email FROM users WHERE id = ?').get(match.mentee_id);
+    const mentorProfile = db.prepare('SELECT full_name, email, linkedin_url FROM mentor_profiles WHERE user_id = ?').get(req.user.id);
+
+    sendMentorAcceptedEmail(
+        menteeUser.email,
+        mentorProfile?.full_name || 'Your Mentor',
+        mentorProfile?.email,
+        mentorProfile?.linkedin_url
+    ).catch(err => console.error('Mentor accept email failed:', err));
+
+    res.json({ success: true });
+});
+
+app.post('/api/matches/decline', authenticateToken, (req, res) => {
+    const { match_id } = req.body;
+
+    // Make sure this match belongs to this mentor
+    const match = db.prepare(
+        `SELECT * FROM matches WHERE id = ? AND mentor_id = ?`
+    ).get(match_id, req.user.id);
+    if (!match) return res.status(404).json({ error: 'Match not found' });
+
+    db.prepare(`UPDATE matches SET status = 'declined' WHERE id = ?`).run(match_id);
+
+    // Notify the mentee
+    const menteeUser = db.prepare('SELECT email FROM users WHERE id = ?').get(match.mentee_id);
+
+    sendMentorDeclinedEmail(menteeUser.email)
+        .catch(err => console.error('Mentor decline email failed:', err));
+
+    res.json({ success: true });
+});
+
+// ---- TEMPORARY TEST ROUTES - DELETE BEFORE PRODUCTION ----
+
+app.get('/api/test/welcome-email', async (req, res) => {
+    try {
+        await sendWelcomeEmail('test@example.com', 'mentor');
+        res.json({ success: true, sent: 'welcome email' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/test/match-confirmed-email', async (req, res) => {
+    try {
+        await sendMatchConfirmedEmail('mentee@example.com', 'mentor@example.com', 'John Smith');
+        res.json({ success: true, sent: 'match confirmed email' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/test/mentor-accepted-email', async (req, res) => {
+    try {
+        await sendMentorAcceptedEmail('mentee@example.com', 'John Smith', 'john@gmail.com', 'linkedin.com/in/johnsmith');
+        res.json({ success: true, sent: 'mentor accepted email' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/test/mentor-declined-email', async (req, res) => {
+    try {
+        await sendMentorDeclinedEmail('mentee@example.com');
+        res.json({ success: true, sent: 'mentor declined email' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/test/match-dissolved-email', async (req, res) => {
+    try {
+        await sendMatchDissolvedEmail('user@example.com');
+        res.json({ success: true, sent: 'match dissolved email' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ---- END TEST ROUTES ----
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
