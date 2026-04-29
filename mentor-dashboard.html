@@ -19,63 +19,95 @@
 
   <main style="max-width: 900px; margin: 0 auto; padding: 3rem 2rem;">
 
-    <h1 style="font-size: 1.5rem; margin-bottom: 2rem;">Pending Mentee Requests</h1>
+    <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Top Mentee Matches</h1>
+    <p class="text-muted" id="matches-subtitle" style="margin-bottom: 2rem;">Loading your mentee matches...</p>
 
-    <div class="request-card new" style="position: relative;">
-      <div class="badge-new">NEW</div>
-
-      <div class="match-header"
-        style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
-        <div class="match-avatar" style="width: 56px; height: 56px;"></div>
-        <div>
-          <h2 style="font-size: 1.125rem; margin-bottom: 0;">Anonymous Mentee</h2>
-          <span class="text-muted" style="font-size: 0.875rem;">Interested in connecting with you</span>
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-        <div>
-          <div class="match-info-label">Industry</div>
-          <div class="match-info-value">Artificial Intelligence</div>
-        </div>
-        <div>
-          <div class="match-info-label">Stage</div>
-          <div class="match-info-value">MVP / Early Traction</div>
-        </div>
-        <div>
-          <div class="match-info-label">Location</div>
-          <div class="match-info-value">San Francisco, CA</div>
-        </div>
-        <div>
-          <div class="match-info-label">Looking For</div>
-          <div class="match-info-value">Product Strategy, Go-To-Market</div>
-        </div>
-        <div>
-          <div class="match-info-label">Meeting Preference</div>
-          <div class="match-info-value">Weekly, 45 min video calls</div>
-        </div>
-        <div>
-          <div class="match-info-label">3-Month Goal</div>
-          <div class="match-info-value">Launch first 100 customers</div>
-        </div>
-      </div>
-
-      <div style="display: flex; gap: 1rem;">
-        <button class="btn btn-success" style="flex: 2;">✓ Accept &mdash; Reveal My Contact Info</button>
-        <button class="btn btn-danger-outline" style="flex: 1;">✕ Decline</button>
-        <a href="mentee-details.html" class="btn btn-outline" style="flex: 1;">More Info</a>
-      </div>
-    </div>
-
-
-    <h2 style="font-size: 1.125rem; color: var(--text-muted); margin-bottom: 1rem; margin-top: 4rem;">Past Requests</h2>
-    <div class="request-card" style="text-align: center; color: var(--text-muted); font-size: 0.875rem; padding: 2rem;">
-      No past requests yet.
-    </div>
+    <div id="matches-container"></div>
 
   </main>
 
   <script src="auth-shared.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const token = localStorage.getItem('atobeToken');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const container = document.getElementById('matches-container');
+      const subtitle = document.getElementById('matches-subtitle');
+
+      try {
+        const response = await fetch('/api/matches', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch matches');
+        }
+
+        const matches = await response.json();
+        
+        if (matches.length === 0) {
+          subtitle.textContent = "We couldn't find any mentees that match your profile yet.";
+          container.innerHTML = "";
+          return;
+        }
+
+        subtitle.textContent = `We found ${matches.length} startups that match your expertise.`;
+        container.innerHTML = "";
+
+        matches.forEach((match, index) => {
+            let helpAreasStr = "Mentorship";
+            try {
+                const helpAreas = JSON.parse(match.help_areas || '[]');
+                if (helpAreas.length > 0) helpAreasStr = helpAreas.join(', ');
+            } catch(e){}
+
+            const card = \`
+              <div class="request-card" style="position: relative; margin-bottom: 2rem;">
+                <div class="badge-new" style="background-color: var(--primary-blue); color: white;">${match.matchPercentage}% Match</div>
+
+                <div class="match-header"
+                  style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                  <div class="match-avatar" style="width: 56px; height: 56px;"></div>
+                  <div>
+                    <h2 style="font-size: 1.125rem; margin-bottom: 0;">${match.startup_name || 'Anonymous Startup'}</h2>
+                    <span class="text-muted" style="font-size: 0.875rem;">${match.current_stage || 'Unknown stage'}</span>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                  <div>
+                    <div class="match-info-label">Founders</div>
+                    <div class="match-info-value">${match.founders || 'N/A'}</div>
+                  </div>
+                  <div style="grid-column: span 2;">
+                    <div class="match-info-label">Looking For Help With</div>
+                    <div class="match-info-value">${helpAreasStr}</div>
+                  </div>
+                  <div style="grid-column: span 2;">
+                    <div class="match-info-label">Main Decision / Challenge</div>
+                    <div class="match-info-value">${match.main_decision || 'N/A'}</div>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                  <button class="btn btn-success" style="flex: 2;">✓ Send Connection Request</button>
+                  <a href="mentee-details.html" class="btn btn-outline" style="flex: 1;">More Info</a>
+                </div>
+              </div>
+            \`;
+            container.innerHTML += card;
+        });
+
+      } catch (err) {
+        console.error(err);
+        subtitle.textContent = "An error occurred while loading your matches.";
+      }
+    });
+  </script>
 </body>
 
 </html>

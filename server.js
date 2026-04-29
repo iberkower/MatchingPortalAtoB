@@ -114,7 +114,7 @@ app.post('/api/signup', async (req, res) => {
         if (err.message.includes('UNIQUE constraint failed')) {
             return res.status(400).json({ error: 'Email already exists' });
         }
-        res.status(500).json({ error: 'Database error' });
+        res.status(500).json({ error: 'Database error: ' + err.message });
     }
 });
 
@@ -276,78 +276,103 @@ const INTERACTION_MAPPING = {
     "Intros are useful after guidance": ["Intros to customers", "Intros to investors"]
 };
 
-// Get Mentor Matches
-app.get('/api/matches', authenticateToken, (req, res) => {
-    if (req.user.role !== 'mentee') {
-        return res.status(403).json({ error: 'Only mentees can view matches' });
-    }
+const calculateMatchScore = (menteeProfile, mentorProfile) => {
+    let score = 0;
+    let maxScore = 0;
 
-    const menteeProfile = db.prepare('SELECT * FROM mentee_profiles WHERE user_id = ?').get(req.user.id);
-    if (!menteeProfile) {
-         return res.status(404).json({ error: 'Mentee profile not found' });
-    }
-
-    const mentors = db.prepare('SELECT * FROM mentor_profiles').all();
-    
     let menteeHelpAreas = [];
     try { menteeHelpAreas = JSON.parse(menteeProfile.help_areas || '[]'); } catch(e) {}
     const menteeStage = menteeProfile.current_stage || '';
     const menteeInteraction = menteeProfile.interaction_style || '';
 
-    const scoredMentors = mentors.map(mentor => {
-        let score = 0;
-        let maxScore = 0;
+    let mentorHelpAreas = [];
+    let mentorStages = [];
+    let mentorEngagement = [];
+    
+    try { mentorHelpAreas = JSON.parse(mentorProfile.help_areas || '[]'); } catch(e) {}
+    try { mentorStages = JSON.parse(mentorProfile.effective_stages || '[]'); } catch(e) {}
+    try { mentorEngagement = JSON.parse(mentorProfile.engagement_modes || '[]'); } catch(e) {}
 
-        let mentorHelpAreas = [];
-        let mentorStages = [];
-        let mentorEngagement = [];
-        
-        try { mentorHelpAreas = JSON.parse(mentor.help_areas || '[]'); } catch(e) {}
-        try { mentorStages = JSON.parse(mentor.effective_stages || '[]'); } catch(e) {}
-        try { mentorEngagement = JSON.parse(mentor.engagement_modes || '[]'); } catch(e) {}
+    // 1. Stage Score (Max 40)
+    maxScore += 40;
+    const mappedStages = STAGE_MAPPING[menteeStage] || [];
+    if (mappedStages.some(stage => mentorStages.includes(stage))) {
+        score += 40;
+    }
 
-        // 1. Stage Score (Max 40)
-        maxScore += 40;
-        const mappedStages = STAGE_MAPPING[menteeStage] || [];
-        if (mappedStages.some(stage => mentorStages.includes(stage))) {
-            score += 40;
+    // 2. Help Areas Score (Max 40: 20 per matching area)
+    maxScore += 40;
+    let helpAreaPoints = 0;
+    menteeHelpAreas.forEach(area => {
+        const mappedArea = HELP_AREAS_MAPPING[area];
+        if (mappedArea && mentorHelpAreas.includes(mappedArea)) {
+            helpAreaPoints += 20;
         }
-
-        // 2. Help Areas Score (Max 40: 20 per matching area)
-        maxScore += 40;
-        let helpAreaPoints = 0;
-        menteeHelpAreas.forEach(area => {
-            const mappedArea = HELP_AREAS_MAPPING[area];
-            if (mappedArea && mentorHelpAreas.includes(mappedArea)) {
-                helpAreaPoints += 20;
-            }
-        });
-        score += Math.min(helpAreaPoints, 40);
-
-        // 3. Interaction Style (Max 20)
-        maxScore += 20;
-        const mappedInteractions = INTERACTION_MAPPING[menteeInteraction] || [];
-        if (mappedInteractions.some(interaction => mentorEngagement.includes(interaction))) {
-            score += 20;
-        }
-
-        const matchPercentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-        
-        return {
-            id: mentor.user_id,
-            matchPercentage,
-            company: mentor.company,
-            current_role: mentor.current_role,
-            domains: mentor.domains,
-            experience: mentor.past_startups || mentor.company,
-            skills: mentor.help_areas
-        };
     });
+    score += Math.min(helpAreaPoints, 40);
 
-    scoredMentors.sort((a, b) => b.matchPercentage - a.matchPercentage);
-    const topMatches = scoredMentors.slice(0, 3);
+    // 3. Interaction Style (Max 20)
+    maxScore += 20;
+    const mappedInteractions = INTERACTION_MAPPING[menteeInteraction] || [];
+    if (mappedInteractions.some(interaction => mentorEngagement.includes(interaction))) {
+        score += 20;
+    }
 
-    res.json(topMatches);
+    return maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+};
+
+// Get Matches
+app.get('/api/matches', authenticateToken, (req, res) => {
+    if (req.user.role === 'mentee') {
+        const menteeProfile = db.prepare('SELECT * FROM mentee_profiles WHERE user_id = ?').get(req.user.id);
+        if (!menteeProfile) {
+             return res.status(404).json({ error: 'Mentee profile not found' });
+        }
+
+        const mentors = db.prepare('SELECT * FROM mentor_profiles').all();
+        
+        const scoredMentors = mentors.map(mentor => {
+            const matchPercentage = calculateMatchScore(menteeProfile, mentor);
+            return {
+                id: mentor.user_id,
+                matchPercentage,
+                company: mentor.company,
+                current_role: mentor.current_role,
+                domains: mentor.domains,
+                experience: mentor.past_startups || mentor.company,
+                skills: mentor.help_areas
+            };
+        });
+
+        scoredMentors.sort((a, b) => b.matchPercentage - a.matchPercentage);
+        return res.json(scoredMentors.slice(0, 3));
+        
+    } else if (req.user.role === 'mentor') {
+        const mentorProfile = db.prepare('SELECT * FROM mentor_profiles WHERE user_id = ?').get(req.user.id);
+        if (!mentorProfile) {
+             return res.status(404).json({ error: 'Mentor profile not found' });
+        }
+
+        const mentees = db.prepare('SELECT * FROM mentee_profiles').all();
+        
+        const scoredMentees = mentees.map(mentee => {
+            const matchPercentage = calculateMatchScore(mentee, mentorProfile);
+            return {
+                id: mentee.user_id,
+                matchPercentage,
+                startup_name: mentee.startup_name,
+                founders: mentee.founders,
+                current_stage: mentee.current_stage,
+                help_areas: mentee.help_areas,
+                main_decision: mentee.main_decision
+            };
+        });
+
+        scoredMentees.sort((a, b) => b.matchPercentage - a.matchPercentage);
+        return res.json(scoredMentees.slice(0, 3));
+    }
+
+    return res.status(403).json({ error: 'Invalid role' });
 });
 
 app.post('/api/matches/confirm', authenticateToken, (req, res) => {
