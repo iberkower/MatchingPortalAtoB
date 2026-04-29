@@ -14,7 +14,7 @@
   --radius-lg: 12px;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-card: 0 10px 25px -5px rgba(0,0,0,0.05);
+  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -91,6 +91,7 @@ h3 {
   color: var(--text-muted);
   font-weight: 500;
 }
+
 .navbar .nav-links a:hover {
   color: var(--text-dark);
   text-decoration: none;
@@ -102,6 +103,7 @@ h3 {
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-md);
   font-weight: 600;
+  font-size: 1rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
@@ -314,7 +316,7 @@ textarea.form-control {
   margin-bottom: 1.25rem;
 }
 
-.form-row > .form-group {
+.form-row>.form-group {
   flex: 1;
   margin-bottom: 0;
 }
@@ -353,7 +355,8 @@ textarea.form-control {
 .hero {
   text-align: center;
   padding: 6rem 2rem;
-  background-color: var(--bg-color); /* To match the nav nicely */
+  background-color: var(--bg-color);
+  /* To match the nav nicely */
 }
 
 .hero h1 {
@@ -415,13 +418,16 @@ textarea.form-control {
   .split-layout {
     flex-direction: column;
   }
+
   .split-left {
     padding: 3rem 2rem;
   }
+
   .form-row {
     flex-direction: column;
     gap: 1.25rem;
   }
+
   .features-grid {
     flex-direction: column;
     gap: 3rem;
@@ -445,6 +451,7 @@ textarea.form-control {
   font-size: 0.875rem;
   color: var(--text-muted);
 }
+
 .user-profile-nav .avatar-icon {
   width: 24px;
   height: 24px;
@@ -523,6 +530,7 @@ textarea.form-control {
   text-align: center;
   padding: 3rem 1rem;
 }
+
 .success-banner h1 {
   color: white;
   margin-top: 0.5rem;
@@ -545,11 +553,13 @@ textarea.form-control {
   border-radius: var(--radius-md);
   padding: 1.5rem;
 }
+
 .checklist li {
   margin-bottom: 0.75rem;
   color: var(--text-muted);
   font-size: 0.875rem;
 }
+
 .checklist li::before {
   content: '☐';
   margin-right: 0.5rem;
@@ -582,7 +592,8 @@ textarea.form-control {
 
 .btn-yes {
   flex: 1;
-  background-color: #10B981; /* Green */
+  background-color: #10B981;
+  /* Green */
   color: white;
   padding: 1.5rem;
   border-radius: var(--radius-md);
@@ -594,7 +605,8 @@ textarea.form-control {
 .btn-no {
   flex: 1;
   background-color: white;
-  color: #EF4444; /* Red */
+  color: #EF4444;
+  /* Red */
   border: 2px solid #EF4444;
   padding: 1.5rem;
   border-radius: var(--radius-md);
@@ -604,7 +616,8 @@ textarea.form-control {
 
 .stars {
   font-size: 2rem;
-  color: #F59E0B; /* Orange */
+  color: #F59E0B;
+  /* Orange */
   margin-bottom: 1.5rem;
 }
 
@@ -614,6 +627,7 @@ textarea.form-control {
   gap: 1rem;
   margin-bottom: 2rem;
 }
+
 .checkbox-item {
   display: flex;
   align-items: center;
@@ -650,6 +664,7 @@ textarea.form-control {
   background-color: #10B981;
   color: white;
 }
+
 .btn-danger-outline {
   background-color: white;
   color: #EF4444;
