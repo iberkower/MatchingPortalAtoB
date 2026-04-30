@@ -1,40 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AtoBe Startups - Form Responses</title>
-  <link rel="stylesheet" href="index.css">
-  <style>
-    /* Prevent inputs from being edited in this review mode */
-    input, select, textarea {
-      pointer-events: none;
-    }
-    .background-title {
-      position: absolute;
-      top: 5rem;
-      left: 10%;
-      font-size: 4rem;
-      font-weight: 800;
-      color: var(--primary-blue);
-      opacity: 0.05;
-      z-index: 0;
-      pointer-events: none;
-    }
-  </style>
-</head>
-<body style="min-height: 100vh; position: relative;">
-  
-  <header class="dashboard-header" style="position: relative; z-index: 10;">
-    <a href="index.html" class="logo">AtoBe Startups</a>
-    <div class="user-profile-nav">
-      First name Last name <span class="avatar-icon"></span>
-    </div>
-  </header>
+const fs = require('fs');
+let code = fs.readFileSync('mentee-details.html', 'utf8');
 
-  <div class="background-title">Form Responses</div>
-
-    <main style="padding: 3rem 2rem; display: flex; justify-content: center; position: relative; z-index: 1;">
+const replacementHtml = `  <main style="padding: 3rem 2rem; display: flex; justify-content: center; position: relative; z-index: 1;">
     <div style="max-width: 800px; width: 100%; background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 3rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
       
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
@@ -75,40 +42,9 @@
       <a href="mentor-dashboard.html" class="btn btn-outline btn-block" style="text-align: center;">Go Back</a>
 
     </div>
-  </main>
+  </main>`;
 
-
-  <script src="auth-shared.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get('id');
-      
-      if (!id) {
-        alert("No mentee ID provided.");
-        window.location.href = 'mentor-dashboard.html';
-        return;
-      }
-      
-      const token = localStorage.getItem('atobeToken');
-      if (!token) {
-        window.location.href = 'login.html';
-        return;
-      }
-      
-      try {
-        const res = await fetch('/api/profile/mentee/' + id, {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        
-        if (!res.ok) {
-           throw new Error("Failed to load mentee profile");
-        }
-        
-        const profile = await res.json();
-        
-        // Map data to DOM elements based on IDs in the HTML
-
+const jsUpdates = `
         const sName = profile.startup_name || 'Anonymous Startup';
         document.getElementById('ui-startup-name').textContent = sName;
         document.getElementById('ui-founders').textContent = profile.founders ? 'Founded by ' + profile.founders : 'Founders unlisted';
@@ -121,7 +57,7 @@
         let extra = [];
         if (profile.goals) extra.push(profile.goals);
         if (profile.extra_info) extra.push(profile.extra_info);
-        document.getElementById('ui-extra').textContent = extra.length > 0 ? extra.join('\n\n') : 'No additional information provided.';
+        document.getElementById('ui-extra').textContent = extra.length > 0 ? extra.join('\\n\\n') : 'No additional information provided.';
 
         const skillsContainer = document.getElementById('ui-help-areas');
         if (skillsContainer) {
@@ -130,20 +66,17 @@
           try { helpAreas = JSON.parse(profile.help_areas || '[]'); } catch(e){}
           if (helpAreas.length > 0) {
               helpAreas.forEach(area => {
-                  skillsContainer.innerHTML += `<div class="pill active" style="pointer-events: none;">${area}</div>`;
+                  skillsContainer.innerHTML += \\\`<div class="pill active" style="pointer-events: none;">\${area}</div>\\\`;
               });
           } else {
               skillsContainer.innerHTML = '<i style="color: var(--text-muted);">No specific skills selected</i>';
           }
         }
+`;
 
-        
-      } catch (e) {
-        console.error(e);
-        alert("Could not load mentee details.");
-      }
-    });
-  </script>
-</body>
+let newCode = code.replace(/<main[\s\S]*?<\/main>/, replacementHtml);
 
-</html>
+// Remove the old document.getElementById('startup-name... logic
+newCode = newCode.replace(/\/\/ Map data to DOM elements based on IDs in the HTML[\s\S]*? \/\/ Format skills\/help areas as active pills[\s\S]*?\}\n        \}/, '// Map data to DOM elements based on IDs in the HTML\n' + jsUpdates.replace(/\\\\\\`/g, "`"));
+
+fs.writeFileSync('mentee-details.html', newCode);

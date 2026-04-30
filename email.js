@@ -42,6 +42,8 @@ async function sendMatchConfirmedEmail(menteeEmail, mentorEmail, mentorName) {
     `,
   });
 
+  await new Promise(r => setTimeout(r, 1500));
+
   // Email to mentor
   await transporter.sendMail({
     from: `"AtoBe Startups" <${process.env.EMAIL_USER}>`,
@@ -64,7 +66,7 @@ async function sendMentorAcceptedEmail(menteeEmail, mentorName, mentorEmail, men
     html: `
       <h2>Your mentor accepted! 🙌</h2>
       <p><strong>${mentorName}</strong> has accepted your connection request.</p>
-      <p>Reach out to schedule your first meeting:</p>
+      <p>They will reach out to schedule your first meeting:</p>
       <ul>
         <li>Email: <a href="mailto:${mentorEmail}">${mentorEmail}</a></li>
         ${mentorLinkedin ? `<li>LinkedIn: <a href="${mentorLinkedin}">${mentorLinkedin}</a></li>` : ''}
@@ -101,7 +103,38 @@ async function sendMatchDissolvedEmail(toEmail) {
   });
 }
 
+
+// Sent when Mentee requests a Mentor
+async function sendMenteeRequestEmail(menteeEmail, mentorEmail, menteeName) {
+  // Email to mentee
+  await transporter.sendMail({
+    from: '"AtoBe Startups" <' + process.env.EMAIL_USER + '>',
+    to: menteeEmail,
+    subject: "Request sent to Mentor!",
+    html: `
+      <h2>Request Sent! ⏳</h2>
+      <p>We've sent your request to your chosen mentor.</p>
+      <p>We'll let you know as soon as they accept or decline.</p>
+    `,
+  });
+
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Email to mentor
+  await transporter.sendMail({
+    from: '"AtoBe Startups" <' + process.env.EMAIL_USER + '>',
+    to: mentorEmail,
+    subject: 'New mentorship request from ' + menteeName,
+    html: `
+      <h2>You have a new mentee request!</h2>
+      <p><strong>${menteeName}</strong> has selected you as a potential mentor on AtoBe Startups.</p>
+      <p>Log in to your dashboard to view their profile and accept or decline their request.</p>
+    `,
+  });
+}
+
 module.exports = {
+  sendMenteeRequestEmail,
   sendWelcomeEmail,
   sendMatchConfirmedEmail,
   sendMentorAcceptedEmail,

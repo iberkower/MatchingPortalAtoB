@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (response.ok) {
                 const data = await response.json();
-                const displayName = data.role === 'mentor'
+                const displayName = data.user.role === 'mentor'
                     ? data.profile?.full_name || 'Mentor'
                     : data.profile?.founders || 'Founder';
 

@@ -161,8 +161,8 @@
                 });
 
                 if (response.ok) {
-                    alert('Profile updated successfully!');
-                    window.location.reload();
+                    
+                    const role = localStorage.getItem('atobeRole'); window.location.href = role === 'mentor' ? 'mentor-dashboard.html' : 'mentor-matches.html';
                 } else {
                     alert('Failed to update profile');
                 }

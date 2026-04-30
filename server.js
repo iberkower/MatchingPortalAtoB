@@ -1,6 +1,7 @@
 require('dotenv').config();
 const {
   sendWelcomeEmail,
+  sendMenteeRequestEmail,
   sendMatchConfirmedEmail,
   sendMentorAcceptedEmail,
   sendMentorDeclinedEmail,
@@ -166,6 +167,14 @@ app.post('/api/profile/mentor', authenticateToken, (req, res) => {
 });
 
 // Mentee Profile
+
+app.get('/api/profile/mentee/:id', authenticateToken, (req, res) => {
+    // Only mentors can see mentee profiles by ID (or mentees themselves, but they use /me)
+    const profile = db.prepare('SELECT * FROM mentee_profiles WHERE user_id = ?').get(req.params.id);
+    if (!profile) return res.status(404).json({ error: 'Mentee not found' });
+    res.json(profile);
+});
+
 app.post('/api/profile/mentee', authenticateToken, (req, res) => {
     const profile = req.body;
     const insert = db.prepare(`
@@ -321,6 +330,7 @@ const calculateMatchScore = (menteeProfile, mentorProfile) => {
     return maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
 };
 
+
 // Get Matches
 app.get('/api/matches', authenticateToken, (req, res) => {
     if (req.user.role === 'mentee') {
@@ -329,7 +339,41 @@ app.get('/api/matches', authenticateToken, (req, res) => {
              return res.status(404).json({ error: 'Mentee profile not found' });
         }
 
-        const mentors = db.prepare('SELECT * FROM mentor_profiles').all();
+        // First, check if there's an active or pending match for this mentee
+        const activeMatch = db.prepare(`
+            SELECT m.*, mp.full_name as mentor_name, mp.company, mp.current_role, mp.help_areas, mp.domains, mp.past_startups, mp.email, mp.phone, mp.linkedin_url
+            FROM matches m
+            JOIN mentor_profiles mp ON m.mentor_id = mp.user_id
+            WHERE m.mentee_id = ? AND m.status IN ('pending', 'confirmed')
+        `).get(req.user.id);
+
+        if (activeMatch) {
+            return res.json([{
+                id: activeMatch.mentor_id,
+                match_id: activeMatch.id,
+                status: activeMatch.status,
+                mentor_name: activeMatch.mentor_name,
+                company: activeMatch.company,
+                current_role: activeMatch.current_role,
+                domains: activeMatch.domains,
+                experience: activeMatch.past_startups || activeMatch.company,
+                skills: activeMatch.help_areas,
+                email: activeMatch.status === 'confirmed' ? activeMatch.email : null,
+                phone: activeMatch.status === 'confirmed' ? activeMatch.phone : null,
+                linkedin_url: activeMatch.status === 'confirmed' ? activeMatch.linkedin_url : null
+            }]);
+        }
+
+        // Otherwise, get top 3 unmatched mentors who haven't declined this mentee
+        const mentors = db.prepare(`
+            SELECT mp.* FROM mentor_profiles mp
+            WHERE mp.user_id NOT IN (
+                SELECT mentor_id FROM matches WHERE status = 'confirmed'
+            )
+            AND mp.user_id NOT IN (
+                SELECT mentor_id FROM matches WHERE mentee_id = ? AND status = 'declined'
+            )
+        `).all(req.user.id);
         
         const scoredMentors = mentors.map(mentor => {
             const matchPercentage = calculateMatchScore(menteeProfile, mentor);
@@ -340,8 +384,9 @@ app.get('/api/matches', authenticateToken, (req, res) => {
                 current_role: mentor.current_role,
                 domains: mentor.domains,
                 experience: mentor.past_startups || mentor.company,
-                skills: mentor.help_areas
-            };
+                skills: mentor.help_areas,
+                status: 'unmatched'
+            }; // note: completely anonymous (no name, email, etc. returned)
         });
 
         scoredMentors.sort((a, b) => b.matchPercentage - a.matchPercentage);
@@ -353,26 +398,57 @@ app.get('/api/matches', authenticateToken, (req, res) => {
              return res.status(404).json({ error: 'Mentor profile not found' });
         }
 
-        const mentees = db.prepare('SELECT * FROM mentee_profiles').all();
+        const requests = db.prepare(`
+            SELECT m.*, mp.startup_name, mp.founders, mp.current_stage, mp.help_areas, mp.main_decision,
+                   u.email as mentee_email
+            FROM matches m
+            JOIN mentee_profiles mp ON m.mentee_id = mp.user_id
+            JOIN users u ON m.mentee_id = u.id
+            WHERE m.mentor_id = ? AND m.status IN ('pending', 'confirmed')
+        `).all(req.user.id);
         
-        const scoredMentees = mentees.map(mentee => {
-            const matchPercentage = calculateMatchScore(mentee, mentorProfile);
+        const results = requests.map(reqMatch => {
+            const menteeProfileObj = db.prepare('SELECT * FROM mentee_profiles WHERE user_id = ?').get(reqMatch.mentee_id);
+            const matchPercentage = calculateMatchScore(menteeProfileObj, mentorProfile);
             return {
-                id: mentee.user_id,
+                id: reqMatch.mentee_id,
+                match_id: reqMatch.id,
+                status: reqMatch.status,
                 matchPercentage,
-                startup_name: mentee.startup_name,
-                founders: mentee.founders,
-                current_stage: mentee.current_stage,
-                help_areas: mentee.help_areas,
-                main_decision: mentee.main_decision
+                startup_name: reqMatch.startup_name,
+                founders: reqMatch.founders,
+                current_stage: reqMatch.current_stage,
+                help_areas: reqMatch.help_areas,
+                main_decision: reqMatch.main_decision,
+                email: reqMatch.status === 'confirmed' ? reqMatch.mentee_email : null
             };
         });
 
-        scoredMentees.sort((a, b) => b.matchPercentage - a.matchPercentage);
-        return res.json(scoredMentees.slice(0, 3));
+        // if there's a confirmed match, just return it
+        const confirmed = results.find(r => r.status === 'confirmed');
+        if (confirmed) {
+            return res.json([confirmed]);
+        }
+
+        // otherwise return all pending requests
+        return res.json(results);
     }
 
     return res.status(403).json({ error: 'Invalid role' });
+});
+app.post('/api/matches/request-mentee', authenticateToken, (req, res) => {
+    const { mentee_id } = req.body;
+    
+    if (req.user.role !== 'mentor') {
+        return res.status(403).json({ error: 'Only mentors can send requests to mentees' });
+    }
+
+    // Insert the match as pending mentee's acceptance
+    const result = db.prepare(
+        "INSERT INTO matches (mentee_id, mentor_id, status) VALUES (?, ?, 'pending_mentee')"
+    ).run(mentee_id, req.user.id);
+
+    res.json({ success: true, matchId: result.lastInsertRowid });
 });
 
 app.post('/api/matches/confirm', authenticateToken, (req, res) => {
@@ -394,7 +470,8 @@ app.post('/api/matches/confirm', authenticateToken, (req, res) => {
     const mentorUser = db.prepare('SELECT email FROM users WHERE id = ?').get(mentor_id);
     const mentorProfile = db.prepare('SELECT full_name FROM mentor_profiles WHERE user_id = ?').get(mentor_id);
 
-    sendMatchConfirmedEmail(menteeUser.email, mentorUser.email, mentorProfile?.full_name || 'Your Mentor')
+    const menteeProf = db.prepare('SELECT founders FROM mentee_profiles WHERE user_id = ?').get(req.user.id);
+    sendMenteeRequestEmail(menteeUser.email, mentorUser.email, menteeProf?.founders || 'A Founder')
         .catch(err => console.error('Match confirm email failed:', err));
 
     res.json({ success: true, matchId: result.lastInsertRowid });

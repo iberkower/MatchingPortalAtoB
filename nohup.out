@@ -1,0 +1,34 @@
+
+> matchingportalatobe@1.0.0 start
+> node server.js
+
+◇ injected env (2) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Server running at http://localhost:3000
+
+> matchingportalatobe@1.0.0 start
+> node server.js
+
+◇ injected env (2) from .env // tip: ⌘ override existing { override: true }
+Server running at http://localhost:3000
+Match confirm email failed: Error: Data command failed: 550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing
+    at SMTPConnection._formatError (/Users/isaacberkower/MatchingPortalAtoB/node_modules/nodemailer/lib/smtp-connection/index.js:887:19)
+    at SMTPConnection._actionDATA (/Users/isaacberkower/MatchingPortalAtoB/node_modules/nodemailer/lib/smtp-connection/index.js:1797:34)
+    at SMTPConnection.<anonymous> (/Users/isaacberkower/MatchingPortalAtoB/node_modules/nodemailer/lib/smtp-connection/index.js:1769:26)
+    at SMTPConnection._processResponse (/Users/isaacberkower/MatchingPortalAtoB/node_modules/nodemailer/lib/smtp-connection/index.js:1072:20)
+    at SMTPConnection._onData (/Users/isaacberkower/MatchingPortalAtoB/node_modules/nodemailer/lib/smtp-connection/index.js:847:14)
+    at SMTPConnection._onSocketData (/Users/isaacberkower/MatchingPortalAtoB/node_modules/nodemailer/lib/smtp-connection/index.js:217:44)
+    at TLSSocket.emit (node:events:507:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5) {
+  code: 'EENVELOPE',
+  response: '550 5.7.0 Too many emails per second. Please upgrade your plan https://mailtrap.io/billing/plans/testing',
+  responseCode: 550,
+  command: 'DATA'
+}
+
+> matchingportalatobe@1.0.0 start
+> node server.js
+
+◇ injected env (2) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Server running at http://localhost:3000

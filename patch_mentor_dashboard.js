@@ -1,32 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
+const fs = require('fs');
+let code = fs.readFileSync('mentor-dashboard.html', 'utf8');
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AtoBe Startups - Mentor Dashboard</title>
-  <link rel="stylesheet" href="index.css">
-</head>
-
-<body style="min-height: 100vh;">
-
-  <header class="dashboard-header">
-    <a href="index.html" class="logo">AtoBe Startups</a>
-    <div class="user-profile-nav">
-      First name Last name <span class="avatar-icon"></span>
-    </div>
-  </header>
-
-  <main style="max-width: 900px; margin: 0 auto; padding: 3rem 2rem;">
-
-    <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Top Mentee Matches</h1>
-    <p class="text-muted" id="matches-subtitle" style="margin-bottom: 2rem;">Loading your mentee matches...</p>
-
-    <div id="matches-container"></div>
-
-  </main>
-
-  
+const replacementJs = `
   <script src="auth-shared.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
@@ -42,7 +17,7 @@
 
       try {
         const response = await fetch('/api/matches', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': \`Bearer \${token}\` }
         });
 
         if (!response.ok) {
@@ -72,44 +47,44 @@
                 if (helpAreas.length > 0) helpAreasStr = helpAreas.join(', ');
             } catch (e) {}
 
-            const card = `
+            const card = \`
               <div class="request-card" style="position: relative; margin-bottom: 2rem;">
                 <div class="match-header"
                   style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
                   <div class="match-avatar" style="width: 56px; height: 56px;"></div>
                   <div>
-                    <h2 style="font-size: 1.125rem; margin-bottom: 0;">${confirmedMatch.startup_name || 'Anonymous Startup'}</h2>
-                    <span class="text-muted" style="font-size: 0.875rem;">${confirmedMatch.current_stage || 'Unknown stage'}</span>
+                    <h2 style="font-size: 1.125rem; margin-bottom: 0;">\${confirmedMatch.startup_name || 'Anonymous Startup'}</h2>
+                    <span class="text-muted" style="font-size: 0.875rem;">\${confirmedMatch.current_stage || 'Unknown stage'}</span>
                   </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                   <div>
                     <div class="match-info-label">Founders</div>
-                    <div class="match-info-value">${confirmedMatch.founders || 'N/A'}</div>
+                    <div class="match-info-value">\${confirmedMatch.founders || 'N/A'}</div>
                   </div>
                   <div style="grid-column: span 2;">
                     <div class="match-info-label">Looking For Help With</div>
-                    <div class="match-info-value">${helpAreasStr}</div>
+                    <div class="match-info-value">\${helpAreasStr}</div>
                   </div>
                   <div style="grid-column: span 2;">
                     <div class="match-info-label">Contact / Email</div>
-                    <div class="match-info-value">${confirmedMatch.email || 'N/A'}</div>
+                    <div class="match-info-value">\${confirmedMatch.email || 'N/A'}</div>
                   </div>
                 </div>
                 
                 <div style="display: flex; gap: 1rem;">
-                  <a href="mentee-details.html?id=${confirmedMatch.id}" class="btn btn-outline" style="flex: 1;">View Full Answers</a>
+                  <a href="mentee-details.html?id=\${confirmedMatch.id}" class="btn btn-outline" style="flex: 1;">View Full Answers</a>
                 </div>
               </div>
-            `;
+            \`;
             container.innerHTML = card;
             return;
         }
 
         // Otherwise, these are pending requests
         title.textContent = "Pending Mentee Requests";
-        subtitle.textContent = `You have ${data.length} pending request(s) waiting for your review.`;
+        subtitle.textContent = \`You have \${data.length} pending request(s) waiting for your review.\`;
 
         data.forEach(req => {
           let helpAreasStr = "Mentorship";
@@ -118,37 +93,37 @@
             if (helpAreas.length > 0) helpAreasStr = helpAreas.join(', ');
           } catch (e) { }
 
-          const card = `
+          const card = \`
               <div class="request-card" style="position: relative; margin-bottom: 2rem;">
-                <div class="badge-new" style="position: relative; right: auto; top: auto; display: inline-block; margin-bottom: 1rem; background-color: var(--primary-blue); color: white;">Pending your approval</div>
+                <div class="badge-new" style="background-color: var(--primary-blue); color: white;">Pending your approval</div>
 
                 <div class="match-header"
                   style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
                   <div class="match-avatar" style="width: 56px; height: 56px;"></div>
                   <div>
-                    <h2 style="font-size: 1.125rem; margin-bottom: 0;">${req.startup_name || 'Anonymous Startup'}</h2>
-                    <span class="text-muted" style="font-size: 0.875rem;">${req.founders || 'Founders Name'} • ${req.current_stage || ''}</span>
+                    <h2 style="font-size: 1.125rem; margin-bottom: 0;">\${req.startup_name || 'Anonymous Startup'}</h2>
+                    <span class="text-muted" style="font-size: 0.875rem;">\${req.founders || 'Founders Name'} • \${req.current_stage || ''}</span>
                   </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                   <div style="grid-column: span 2;">
                     <div class="match-info-label">Looking For Help With</div>
-                    <div class="match-info-value">${helpAreasStr}</div>
+                    <div class="match-info-value">\${helpAreasStr}</div>
                   </div>
                   <div style="grid-column: span 2;">
                     <div class="match-info-label">Main Decision / Challenge</div>
-                    <div class="match-info-value">${req.main_decision || 'N/A'}</div>
+                    <div class="match-info-value">\${req.main_decision || 'N/A'}</div>
                   </div>
                 </div>
 
                 <div style="display: flex; gap: 1rem;">
-                  <button class="btn btn-success" style="flex: 2;" onclick="respondToRequest(${req.match_id}, 'accept', this)">✓ Accept Request</button>
-                  <button class="btn btn-outline" style="flex: 1; border-color: red; color: red;" onclick="respondToRequest(${req.match_id}, 'decline', this)">Decline</button>
-                  <a href="mentee-details.html?id=${req.id}" class="btn btn-outline" style="flex: 1;">More Info</a>
+                  <button class="btn btn-success" style="flex: 2;" onclick="respondToRequest(\${req.match_id}, 'accept', this)">✓ Accept Request</button>
+                  <button class="btn btn-outline" style="flex: 1; border-color: red; color: red;" onclick="respondToRequest(\${req.match_id}, 'decline', this)">Decline</button>
+                  <a href="mentee-details.html?id=\${req.id}" class="btn btn-outline" style="flex: 1;">More Info</a>
                 </div>
               </div>
-            `;
+            \`;
           container.innerHTML += card;
         });
 
@@ -190,3 +165,10 @@
     }
   </script>
 </body>
+`;
+
+const jsStart = code.indexOf("<script src=\"auth-shared.js\"></script>");
+if (jsStart !== -1) {
+    code = code.substring(0, jsStart) + replacementJs;
+    fs.writeFileSync('mentor-dashboard.html', code);
+}
