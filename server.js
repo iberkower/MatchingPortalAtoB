@@ -1,11 +1,11 @@
 require('dotenv').config();
 const {
-  sendWelcomeEmail,
-  sendMenteeRequestEmail,
-  sendMatchConfirmedEmail,
-  sendMentorAcceptedEmail,
-  sendMentorDeclinedEmail,
-  sendMatchDissolvedEmail,
+    sendWelcomeEmail,
+    sendMenteeRequestEmail,
+    sendMatchConfirmedEmail,
+    sendMentorAcceptedEmail,
+    sendMentorDeclinedEmail,
+    sendMatchDissolvedEmail,
 } = require('./email');
 
 const express = require('express');
@@ -29,6 +29,7 @@ app.use(express.static(path.join(__dirname)));
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
     email TEXT UNIQUE,
     password TEXT,
     role TEXT,
@@ -37,9 +38,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS mentor_profiles (
     user_id INTEGER PRIMARY KEY,
-    full_name TEXT,
     phone TEXT,
-    email TEXT,
     city TEXT,
     current_role TEXT,
     company TEXT,
@@ -102,12 +101,11 @@ const authenticateToken = (req, res, next) => {
 
 // Signup
 app.post('/api/signup', async (req, res) => {
-    const { email, password, role } = req.body;
+    const { email, password, role, fullname } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        const insert = db.prepare('INSERT INTO users (email, password, role) VALUES (?, ?, ?)');
-        const result = insert.run(email, hashedPassword, role);
+        const result = db.prepare('INSERT INTO users (email, password, role, name) VALUES (?, ?, ?, ?)').run(email, hashedPassword, role, fullname);
         const token = jwt.sign({ id: result.lastInsertRowid, email, role }, SECRET_KEY);
         sendWelcomeEmail(email, role).catch(err => console.error('Welcome email failed:', err));
         res.json({ token, role, userId: result.lastInsertRowid });
@@ -135,17 +133,13 @@ app.post('/api/login', async (req, res) => {
 // Mentor Profile
 app.post('/api/profile/mentor', authenticateToken, (req, res) => {
     const profile = req.body;
-    const insert = db.prepare(`
-    INSERT OR REPLACE INTO mentor_profiles 
-    (user_id, full_name, phone, email, city, current_role, company, linkedin_url, is_alumni, mentored_previously, past_startups, interests, is_angel, help_areas, domains, effective_stages, engagement_modes, commitment, feedback)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-    insert.run(
+    db.prepare(`
+        INSERT OR REPLACE INTO mentor_profiles 
+        (user_id, phone, city, current_role, company, linkedin_url, is_alumni, mentored_previously, past_startups, interests, is_angel, help_areas, domains, effective_stages, engagement_modes, commitment, feedback)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
         req.user.id,
-        profile.full_name,
         profile.phone,
-        profile.email,
         profile.city,
         profile.current_role,
         profile.company,
@@ -177,13 +171,11 @@ app.get('/api/profile/mentee/:id', authenticateToken, (req, res) => {
 
 app.post('/api/profile/mentee', authenticateToken, (req, res) => {
     const profile = req.body;
-    const insert = db.prepare(`
-    INSERT OR REPLACE INTO mentee_profiles 
-    (user_id, startup_name, founders, current_stage, main_decision, help_areas, success_definition, taken_action, interaction_style, constraints, extra_info)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-    insert.run(
+    db.prepare(`
+        INSERT OR REPLACE INTO mentee_profiles 
+        (user_id, startup_name, founders, current_stage, main_decision, help_areas, success_definition, taken_action, interaction_style, constraints, extra_info)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
         req.user.id,
         profile.startup_name,
         profile.founders,
@@ -202,7 +194,7 @@ app.post('/api/profile/mentee', authenticateToken, (req, res) => {
 
 // Get Current User Profile
 app.get('/api/profile/me', authenticateToken, (req, res) => {
-    const user = db.prepare('SELECT id, email, role FROM users WHERE id = ?').get(req.user.id);
+    const user = db.prepare('SELECT id, email, role, name FROM users WHERE id = ?').get(req.user.id);
     let profile = null;
 
     if (user.role === 'mentor') {
@@ -230,22 +222,15 @@ app.post('/api/profile/update', authenticateToken, async (req, res) => {
         }
 
         // Update profile table
-        if (req.user.role === 'mentor') {
+        if (Object.keys(profileData).length > 0) {
+            const table = req.user.role === 'mentor' ? 'mentor_profiles' : 'mentee_profiles';
             const keys = Object.keys(profileData);
             const sets = keys.map(k => `${k} = ?`).join(', ');
             const values = keys.map(k => {
                 const val = profileData[k];
                 return Array.isArray(val) ? JSON.stringify(val) : val;
             });
-            db.prepare(`UPDATE mentor_profiles SET ${sets} WHERE user_id = ?`).run(...values, req.user.id);
-        } else {
-            const keys = Object.keys(profileData);
-            const sets = keys.map(k => `${k} = ?`).join(', ');
-            const values = keys.map(k => {
-                const val = profileData[k];
-                return Array.isArray(val) ? JSON.stringify(val) : val;
-            });
-            db.prepare(`UPDATE mentee_profiles SET ${sets} WHERE user_id = ?`).run(...values, req.user.id);
+            db.prepare(`UPDATE ${table} SET ${sets} WHERE user_id = ?`).run(...values, req.user.id);
         }
     });
 
@@ -290,17 +275,17 @@ const calculateMatchScore = (menteeProfile, mentorProfile) => {
     let maxScore = 0;
 
     let menteeHelpAreas = [];
-    try { menteeHelpAreas = JSON.parse(menteeProfile.help_areas || '[]'); } catch(e) {}
+    try { menteeHelpAreas = JSON.parse(menteeProfile.help_areas || '[]'); } catch (e) { }
     const menteeStage = menteeProfile.current_stage || '';
     const menteeInteraction = menteeProfile.interaction_style || '';
 
     let mentorHelpAreas = [];
     let mentorStages = [];
     let mentorEngagement = [];
-    
-    try { mentorHelpAreas = JSON.parse(mentorProfile.help_areas || '[]'); } catch(e) {}
-    try { mentorStages = JSON.parse(mentorProfile.effective_stages || '[]'); } catch(e) {}
-    try { mentorEngagement = JSON.parse(mentorProfile.engagement_modes || '[]'); } catch(e) {}
+
+    try { mentorHelpAreas = JSON.parse(mentorProfile.help_areas || '[]'); } catch (e) { }
+    try { mentorStages = JSON.parse(mentorProfile.effective_stages || '[]'); } catch (e) { }
+    try { mentorEngagement = JSON.parse(mentorProfile.engagement_modes || '[]'); } catch (e) { }
 
     // 1. Stage Score (Max 40)
     maxScore += 40;
@@ -336,14 +321,16 @@ app.get('/api/matches', authenticateToken, (req, res) => {
     if (req.user.role === 'mentee') {
         const menteeProfile = db.prepare('SELECT * FROM mentee_profiles WHERE user_id = ?').get(req.user.id);
         if (!menteeProfile) {
-             return res.status(404).json({ error: 'Mentee profile not found' });
+            return res.status(404).json({ error: 'Mentee profile not found' });
         }
 
         // First, check if there's an active or pending match for this mentee
         const activeMatch = db.prepare(`
-            SELECT m.*, mp.full_name as mentor_name, mp.company, mp.current_role, mp.help_areas, mp.domains, mp.past_startups, mp.email, mp.phone, mp.linkedin_url
+            SELECT m.*, mp.company, mp.current_role, mp.help_areas, mp.domains, mp.past_startups, mp.phone, mp.linkedin_url,
+               u.name as mentor_name, u.email
             FROM matches m
             JOIN mentor_profiles mp ON m.mentor_id = mp.user_id
+            JOIN users u ON m.mentor_id = u.id
             WHERE m.mentee_id = ? AND m.status IN ('pending', 'confirmed')
         `).get(req.user.id);
 
@@ -374,7 +361,7 @@ app.get('/api/matches', authenticateToken, (req, res) => {
                 SELECT mentor_id FROM matches WHERE mentee_id = ? AND status = 'declined'
             )
         `).all(req.user.id);
-        
+
         const scoredMentors = mentors.map(mentor => {
             const matchPercentage = calculateMatchScore(menteeProfile, mentor);
             return {
@@ -391,11 +378,11 @@ app.get('/api/matches', authenticateToken, (req, res) => {
 
         scoredMentors.sort((a, b) => b.matchPercentage - a.matchPercentage);
         return res.json(scoredMentors.slice(0, 3));
-        
+
     } else if (req.user.role === 'mentor') {
         const mentorProfile = db.prepare('SELECT * FROM mentor_profiles WHERE user_id = ?').get(req.user.id);
         if (!mentorProfile) {
-             return res.status(404).json({ error: 'Mentor profile not found' });
+            return res.status(404).json({ error: 'Mentor profile not found' });
         }
 
         const requests = db.prepare(`
@@ -406,7 +393,7 @@ app.get('/api/matches', authenticateToken, (req, res) => {
             JOIN users u ON m.mentee_id = u.id
             WHERE m.mentor_id = ? AND m.status IN ('pending', 'confirmed')
         `).all(req.user.id);
-        
+
         const results = requests.map(reqMatch => {
             const menteeProfileObj = db.prepare('SELECT * FROM mentee_profiles WHERE user_id = ?').get(reqMatch.mentee_id);
             const matchPercentage = calculateMatchScore(menteeProfileObj, mentorProfile);
@@ -438,7 +425,7 @@ app.get('/api/matches', authenticateToken, (req, res) => {
 });
 app.post('/api/matches/request-mentee', authenticateToken, (req, res) => {
     const { mentee_id } = req.body;
-    
+
     if (req.user.role !== 'mentor') {
         return res.status(403).json({ error: 'Only mentors can send requests to mentees' });
     }
@@ -468,7 +455,7 @@ app.post('/api/matches/confirm', authenticateToken, (req, res) => {
     // Get emails for both parties
     const menteeUser = db.prepare('SELECT email FROM users WHERE id = ?').get(req.user.id);
     const mentorUser = db.prepare('SELECT email FROM users WHERE id = ?').get(mentor_id);
-    const mentorProfile = db.prepare('SELECT full_name FROM mentor_profiles WHERE user_id = ?').get(mentor_id);
+    const mentorProfile = db.prepare('SELECT linkedin_url FROM mentor_profiles WHERE user_id = ?').get(mentor_id);
 
     const menteeProf = db.prepare('SELECT founders FROM mentee_profiles WHERE user_id = ?').get(req.user.id);
     sendMenteeRequestEmail(menteeUser.email, mentorUser.email, menteeProf?.founders || 'A Founder')
@@ -492,12 +479,13 @@ app.post('/api/matches/accept', authenticateToken, (req, res) => {
 
     // Get mentee email + mentor profile for the email
     const menteeUser = db.prepare('SELECT email FROM users WHERE id = ?').get(match.mentee_id);
-    const mentorProfile = db.prepare('SELECT full_name, email, linkedin_url FROM mentor_profiles WHERE user_id = ?').get(req.user.id);
+    const mentorUser = db.prepare('SELECT name, email FROM users WHERE id = ?').get(req.user.id);
+    const mentorProfile = db.prepare('SELECT linkedin_url FROM mentor_profiles WHERE user_id = ?').get(req.user.id);
 
     sendMentorAcceptedEmail(
         menteeUser.email,
-        mentorProfile?.full_name || 'Your Mentor',
-        mentorProfile?.email,
+        mentorUser?.name || 'Your Mentor',
+        mentorUser?.email,
         mentorProfile?.linkedin_url
     ).catch(err => console.error('Mentor accept email failed:', err));
 

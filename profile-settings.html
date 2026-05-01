@@ -70,7 +70,7 @@
 
                     const container = document.getElementById('dynamicFields');
                     if (user.role === 'mentor') {
-                        renderMentorFields(container, profile);
+                        renderMentorFields(container, profile, user);
                     } else {
                         renderMenteeFields(container, profile);
                     }
@@ -80,13 +80,13 @@
             }
         });
 
-        function renderMentorFields(container, profile) {
+        function renderMentorFields(container, profile, user) {
             container.innerHTML = `
             <h2 class="section-title">Mentor Profile</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Full Name</label>
-                    <input type="text" id="full_name" class="form-control" value="${profile?.full_name || ''}">
+                    <input type="text" id="full_name" class="form-control" value="${user?.name || ''}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Current Role</label>
@@ -161,7 +161,7 @@
                 });
 
                 if (response.ok) {
-                    
+
                     const role = localStorage.getItem('atobeRole'); window.location.href = role === 'mentor' ? 'mentor-dashboard.html' : 'mentor-matches.html';
                 } else {
                     alert('Failed to update profile');

@@ -26,14 +26,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (response.ok) {
                 const data = await response.json();
-                const displayName = data.user.role === 'mentor'
-                    ? data.profile?.full_name || 'Mentor'
-                    : data.profile?.founders || 'Founder';
+                const displayName = data.user.name || 'User';
+                const initials = displayName.split(' ').filter(Boolean)
+                    .map(w => w[0]).slice(0, 2).join('');
+
 
                 navContainer.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <a href="profile-settings.html" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-dark); text-decoration: none; font-weight: 500;">
-                            ${displayName} <span class="avatar-icon" style="background-color: var(--primary-blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; width: 24px; height: 24px; border-radius: 50%;">${displayName.charAt(0)}</span>
+                            ${displayName} <span class="avatar-icon" style="background-color: var(--primary-blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; width: 24px; height: 24px; border-radius: 50%;">${initials}</span>
                         </a>
                         <button onclick="handleLogout()" style="background: none; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer;">Logout</button>
                     </div>
