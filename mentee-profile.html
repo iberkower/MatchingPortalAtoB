@@ -204,6 +204,28 @@
         alert('Error connecting to server');
       }
     });
+
+    let formSubmitted = false;
+
+    document.querySelector('form').addEventListener('submit', () => {
+      formSubmitted = true;
+    });
+
+    window.addEventListener('beforeunload', (e) => {
+      if (!formSubmitted) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    document.querySelector('.logo').addEventListener('click', (e) => {
+      if (!formSubmitted) {
+        e.preventDefault();
+        if (confirm('Are you sure you want to leave? Your progress will not be saved.')) {
+          window.location.href = 'index.html';
+        }
+      }
+    });
   </script>
 </body>
 

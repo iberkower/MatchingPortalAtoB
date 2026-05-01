@@ -26,7 +26,7 @@
 
   </main>
 
-  
+
   <script src="auth-shared.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
@@ -63,20 +63,20 @@
         // Check if there is a confirmed match
         const confirmedMatch = data.find(m => m.status === 'confirmed');
         if (confirmedMatch) {
-            title.textContent = "Your Mentee Match";
-            subtitle.textContent = "You have successfully securely matched! Please reach out to your mentee to schedule a meeting.";
-            
-            let helpAreasStr = "Mentorship";
-            try {
-                const helpAreas = JSON.parse(confirmedMatch.help_areas || '[]');
-                if (helpAreas.length > 0) helpAreasStr = helpAreas.join(', ');
-            } catch (e) {}
+          title.textContent = "Your Mentee Match";
+          subtitle.textContent = "You have successfully securely matched! Please reach out to your mentee to schedule a meeting.";
 
-            const card = `
+          let helpAreasStr = "Mentorship";
+          try {
+            const helpAreas = JSON.parse(confirmedMatch.help_areas || '[]');
+            if (helpAreas.length > 0) helpAreasStr = helpAreas.join(', ');
+          } catch (e) { }
+
+          const card = `
               <div class="request-card" style="position: relative; margin-bottom: 2rem;">
                 <div class="match-header"
                   style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
-                  <div class="match-avatar" style="width: 56px; height: 56px;"></div>
+                  <div class="match-avatar" style="width: 56px; height: 56px;">👤</div>
                   <div>
                     <h2 style="font-size: 1.125rem; margin-bottom: 0;">${confirmedMatch.startup_name || 'Anonymous Startup'}</h2>
                     <span class="text-muted" style="font-size: 0.875rem;">${confirmedMatch.current_stage || 'Unknown stage'}</span>
@@ -103,8 +103,8 @@
                 </div>
               </div>
             `;
-            container.innerHTML = card;
-            return;
+          container.innerHTML = card;
+          return;
         }
 
         // Otherwise, these are pending requests
@@ -157,13 +157,13 @@
         subtitle.textContent = "An error occurred while loading your matches.";
       }
     });
-  
+
     async function respondToRequest(matchId, action, buttonEl) {
       if (buttonEl.disabled) return;
       buttonEl.disabled = true;
       const originalText = buttonEl.textContent;
       buttonEl.textContent = "...";
-      
+
       const token = localStorage.getItem('atobeToken');
       try {
         const route = action === 'accept' ? '/api/matches/accept' : '/api/matches/decline';
@@ -175,11 +175,11 @@
           },
           body: JSON.stringify({ match_id: matchId })
         });
-        
+
         if (!res.ok) {
           throw new Error('Failed to ' + action + ' request');
         }
-        
+
         window.location.reload();
       } catch (err) {
         console.error(err);
