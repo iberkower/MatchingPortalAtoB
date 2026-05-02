@@ -84,6 +84,9 @@ db.exec(`
   );
 `);
 
+try { db.exec('ALTER TABLE mentor_profiles ADD COLUMN full_name TEXT'); } catch (e) { }
+try { db.exec('ALTER TABLE mentor_profiles ADD COLUMN email TEXT'); } catch (e) { }
+
 // Auth Middleware
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -215,6 +218,9 @@ app.post('/api/profile/update', authenticateToken, async (req, res) => {
         // Update user table
         if (email) {
             db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, req.user.id);
+        }
+        if (profileData.full_name) {
+            db.prepare('UPDATE users SET name = ? WHERE id = ?').run(profileData.full_name, req.user.id);
         }
         if (password) {
             const hashedPassword = bcrypt.hashSync(password, 10);
