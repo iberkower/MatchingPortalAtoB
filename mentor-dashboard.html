@@ -64,7 +64,7 @@
         const confirmedMatch = data.find(m => m.status === 'confirmed');
         if (confirmedMatch) {
           title.textContent = "Your Mentee Match";
-          subtitle.textContent = "You have successfully securely matched! Please reach out to your mentee to schedule a meeting.";
+          subtitle.textContent = "You have successfully matched! Please reach out to your mentee to schedule a meeting.";
 
           let helpAreasStr = "Mentorship";
           try {
@@ -76,7 +76,7 @@
               <div class="request-card" style="position: relative; margin-bottom: 2rem;">
                 <div class="match-header"
                   style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
-                  <div class="match-avatar" style="width: 56px; height: 56px; background-color: var(--primary-blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold;">${(req.startup_name || 'A')[0].toUpperCase()}</div>
+                  <div class="match-avatar" style="width: 56px; height: 56px; background-color: var(--primary-blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold;">${(confirmedMatch.startup_name || 'A')[0].toUpperCase()}</div>
                   <div>
                     <h2 style="font-size: 1.125rem; margin-bottom: 0;">${confirmedMatch.startup_name || 'Anonymous Startup'}</h2>
                     <span class="text-muted" style="font-size: 0.875rem;">${confirmedMatch.current_stage || 'Unknown stage'}</span>
