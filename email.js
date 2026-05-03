@@ -1,21 +1,24 @@
 const nodemailer = require('nodemailer');
 
+// For production, switch host/port to your real SMTP provider
+// and set EMAIL_FROM, EMAIL_USER, EMAIL_PASS in your .env
 const transporter = nodemailer.createTransport({
-//service: 'gmail',
-//right now the email system works through a system that sends simulated emails with the website mailtrap.io, for real implementation, a more permanents system is required
-  host: 'sandbox.smtp.mailtrap.io',
-  port: 2525,
+  host: process.env.EMAIL_HOST || 'sandbox.smtp.mailtrap.io',
+  port: parseInt(process.env.EMAIL_PORT || '2525'),
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
+const FROM_ADDRESS = `"AtoBe Startups" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`;
+
 // Welcome email when a user signs up
 async function sendWelcomeEmail(toEmail, role) {
+  if (!toEmail) return;
   const isMentor = role === 'mentor';
   await transporter.sendMail({
-    from: `"AtoBe Startups" <${process.env.EMAIL_USER}>`,
+    from: FROM_ADDRESS,
     to: toEmail,
     subject: 'Welcome to AtoBe Startups!',
     html: `
@@ -23,37 +26,33 @@ async function sendWelcomeEmail(toEmail, role) {
       <p>Thanks for joining as a <strong>${isMentor ? 'Mentor' : 'Mentee'}</strong>.</p>
       <p>${isMentor
         ? 'Complete your mentor profile so we can start matching you with founders.'
-        : 'Complete your profile and we\'ll find you the best mentor match.'
+        : "Complete your profile and we'll find you the best mentor match."
       }</p>
     `,
   });
 }
 
-// Sent to mentee + mentor when a match is confirmed
-async function sendMatchConfirmedEmail(menteeEmail, mentorEmail, mentorName) {
-  // Email to mentee
+// Sent to mentee when they send a request, and to the mentor to notify them
+async function sendMenteeRequestEmail(menteeEmail, mentorEmail, menteeName) {
   await transporter.sendMail({
-    from: `"AtoBe Startups" <${process.env.EMAIL_USER}>`,
+    from: FROM_ADDRESS,
     to: menteeEmail,
-    subject: "You've confirmed your mentor match!",
+    subject: 'Request sent to Mentor!',
     html: `
-      <h2>Match Confirmed 🎉</h2>
-      <p>You've been matched with <strong>${mentorName}</strong>.</p>
-      <p>Your mentor will reach out to schedule your first meeting. Keep an eye on your inbox!</p>
+      <h2>Request Sent! ⏳</h2>
+      <p>We've sent your request to your chosen mentor.</p>
+      <p>We'll let you know as soon as they accept or decline.</p>
     `,
   });
 
-  await new Promise(r => setTimeout(r, 1500));
-
-  // Email to mentor
   await transporter.sendMail({
-    from: `"AtoBe Startups" <${process.env.EMAIL_USER}>`,
+    from: FROM_ADDRESS,
     to: mentorEmail,
-    subject: 'A mentee has selected you!',
+    subject: 'New mentorship request from ' + menteeName,
     html: `
-      <h2>You have a new mentee!</h2>
-      <p>A founder has selected you as their mentor on AtoBe Startups.</p>
-      <p>Log in to your dashboard to view their request and accept or decline.</p>
+      <h2>You have a new mentee request!</h2>
+      <p><strong>${menteeName}</strong> has selected you as a potential mentor on AtoBe Startups.</p>
+      <p>Log in to your dashboard to view their profile and accept or decline their request.</p>
     `,
   });
 }
@@ -61,7 +60,7 @@ async function sendMatchConfirmedEmail(menteeEmail, mentorEmail, mentorName) {
 // Sent to mentee when mentor accepts
 async function sendMentorAcceptedEmail(menteeEmail, mentorName, mentorEmail, mentorLinkedin) {
   await transporter.sendMail({
-    from: `"AtoBe Startups" <${process.env.EMAIL_USER}>`,
+    from: FROM_ADDRESS,
     to: menteeEmail,
     subject: `${mentorName} accepted your connection!`,
     html: `
@@ -79,7 +78,7 @@ async function sendMentorAcceptedEmail(menteeEmail, mentorName, mentorEmail, men
 // Sent to mentee when mentor declines
 async function sendMentorDeclinedEmail(menteeEmail) {
   await transporter.sendMail({
-    from: `"AtoBe Startups" <${process.env.EMAIL_USER}>`,
+    from: FROM_ADDRESS,
     to: menteeEmail,
     subject: 'Update on your mentor request',
     html: `
@@ -93,7 +92,7 @@ async function sendMentorDeclinedEmail(menteeEmail) {
 // Sent when a match is dissolved or a user is removed
 async function sendMatchDissolvedEmail(toEmail) {
   await transporter.sendMail({
-    from: `"AtoBe Startups" <${process.env.EMAIL_USER}>`,
+    from: FROM_ADDRESS,
     to: toEmail,
     subject: 'Your AtoBe match has ended',
     html: `
@@ -104,40 +103,9 @@ async function sendMatchDissolvedEmail(toEmail) {
   });
 }
 
-
-// Sent when Mentee requests a Mentor
-async function sendMenteeRequestEmail(menteeEmail, mentorEmail, menteeName) {
-  // Email to mentee
-  await transporter.sendMail({
-    from: '"AtoBe Startups" <' + process.env.EMAIL_USER + '>',
-    to: menteeEmail,
-    subject: "Request sent to Mentor!",
-    html: `
-      <h2>Request Sent! ⏳</h2>
-      <p>We've sent your request to your chosen mentor.</p>
-      <p>We'll let you know as soon as they accept or decline.</p>
-    `,
-  });
-
-  await new Promise(r => setTimeout(r, 1500));
-
-  // Email to mentor
-  await transporter.sendMail({
-    from: '"AtoBe Startups" <' + process.env.EMAIL_USER + '>',
-    to: mentorEmail,
-    subject: 'New mentorship request from ' + menteeName,
-    html: `
-      <h2>You have a new mentee request!</h2>
-      <p><strong>${menteeName}</strong> has selected you as a potential mentor on AtoBe Startups.</p>
-      <p>Log in to your dashboard to view their profile and accept or decline their request.</p>
-    `,
-  });
-}
-
 module.exports = {
-  sendMenteeRequestEmail,
   sendWelcomeEmail,
-  sendMatchConfirmedEmail,
+  sendMenteeRequestEmail,
   sendMentorAcceptedEmail,
   sendMentorDeclinedEmail,
   sendMatchDissolvedEmail,

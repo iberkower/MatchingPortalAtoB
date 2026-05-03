@@ -2,7 +2,6 @@ require('dotenv').config();
 const {
     sendWelcomeEmail,
     sendMenteeRequestEmail,
-    sendMatchConfirmedEmail,
     sendMentorAcceptedEmail,
     sendMentorDeclinedEmail,
     sendMatchDissolvedEmail,
@@ -18,8 +17,12 @@ const path = require('path');
 
 const app = express();
 const db = new Database('database.sqlite');
-const PORT = 3000;
-const SECRET_KEY = 'atobe-secret-key'; // In production, use environment variables
+const PORT = process.env.PORT || 3000;
+const SECRET_KEY = process.env.JWT_SECRET;
+if (!SECRET_KEY) {
+    console.error('FATAL: JWT_SECRET is not set in environment variables.');
+    process.exit(1);
+}
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -100,6 +103,17 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// Allowed columns per table for safe dynamic updates
+const ALLOWED_MENTOR_COLUMNS = new Set([
+    'phone', 'city', 'current_role', 'company', 'linkedin_url', 'is_alumni',
+    'mentored_previously', 'past_startups', 'interests', 'is_angel', 'help_areas',
+    'domains', 'effective_stages', 'engagement_modes', 'commitment', 'feedback', 'full_name', 'email'
+]);
+const ALLOWED_MENTEE_COLUMNS = new Set([
+    'startup_name', 'founders', 'current_stage', 'main_decision', 'help_areas',
+    'success_definition', 'taken_action', 'interaction_style', 'constraints', 'extra_info'
+]);
+
 // API Endpoints
 
 // Signup
@@ -164,9 +178,7 @@ app.post('/api/profile/mentor', authenticateToken, (req, res) => {
 });
 
 // Mentee Profile
-
 app.get('/api/profile/mentee/:id', authenticateToken, (req, res) => {
-    // Only mentors can see mentee profiles by ID (or mentees themselves, but they use /me)
     const profile = db.prepare('SELECT * FROM mentee_profiles WHERE user_id = ?').get(req.params.id);
     if (!profile) return res.status(404).json({ error: 'Mentee not found' });
     res.json(profile);
@@ -213,27 +225,30 @@ app.get('/api/profile/me', authenticateToken, (req, res) => {
 app.post('/api/profile/update', authenticateToken, async (req, res) => {
     const { email, password, ...profileData } = req.body;
 
-    // Start a transaction
+    // Whitelist columns to prevent SQL injection via dynamic key names
+    const allowedColumns = req.user.role === 'mentor' ? ALLOWED_MENTOR_COLUMNS : ALLOWED_MENTEE_COLUMNS;
+    const safeProfileData = Object.fromEntries(
+        Object.entries(profileData).filter(([k]) => allowedColumns.has(k))
+    );
+
     const transaction = db.transaction(() => {
-        // Update user table
         if (email) {
             db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, req.user.id);
         }
-        if (profileData.full_name) {
-            db.prepare('UPDATE users SET name = ? WHERE id = ?').run(profileData.full_name, req.user.id);
+        if (safeProfileData.full_name) {
+            db.prepare('UPDATE users SET name = ? WHERE id = ?').run(safeProfileData.full_name, req.user.id);
         }
         if (password) {
             const hashedPassword = bcrypt.hashSync(password, 10);
             db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashedPassword, req.user.id);
         }
 
-        // Update profile table
-        if (Object.keys(profileData).length > 0) {
+        if (Object.keys(safeProfileData).length > 0) {
             const table = req.user.role === 'mentor' ? 'mentor_profiles' : 'mentee_profiles';
-            const keys = Object.keys(profileData);
+            const keys = Object.keys(safeProfileData);
             const sets = keys.map(k => `${k} = ?`).join(', ');
             const values = keys.map(k => {
-                const val = profileData[k];
+                const val = safeProfileData[k];
                 return Array.isArray(val) ? JSON.stringify(val) : val;
             });
             db.prepare(`UPDATE ${table} SET ${sets} WHERE user_id = ?`).run(...values, req.user.id);
@@ -330,7 +345,6 @@ app.get('/api/matches', authenticateToken, (req, res) => {
             return res.status(404).json({ error: 'Mentee profile not found' });
         }
 
-        // First, check if there's an active or pending match for this mentee
         const activeMatch = db.prepare(`
             SELECT m.*, mp.company, mp.current_role, mp.help_areas, mp.domains, mp.past_startups, mp.phone, mp.linkedin_url,
                u.name as mentor_name, u.email
@@ -357,7 +371,6 @@ app.get('/api/matches', authenticateToken, (req, res) => {
             }]);
         }
 
-        // Otherwise, get top 3 unmatched mentors who haven't declined this mentee
         const mentors = db.prepare(`
             SELECT mp.* FROM mentor_profiles mp
             WHERE mp.user_id NOT IN (
@@ -379,7 +392,7 @@ app.get('/api/matches', authenticateToken, (req, res) => {
                 experience: mentor.past_startups || mentor.company,
                 skills: mentor.help_areas,
                 status: 'unmatched'
-            }; // note: completely anonymous (no name, email, etc. returned)
+            };
         });
 
         scoredMentors.sort((a, b) => b.matchPercentage - a.matchPercentage);
@@ -417,35 +430,24 @@ app.get('/api/matches', authenticateToken, (req, res) => {
             };
         });
 
-        // if there's a confirmed match, just return it
         const confirmed = results.find(r => r.status === 'confirmed');
         if (confirmed) {
             return res.json([confirmed]);
         }
 
-        // otherwise return all pending requests
         return res.json(results);
     }
 
     return res.status(403).json({ error: 'Invalid role' });
 });
-app.post('/api/matches/request-mentee', authenticateToken, (req, res) => {
-    const { mentee_id } = req.body;
 
-    if (req.user.role !== 'mentor') {
-        return res.status(403).json({ error: 'Only mentors can send requests to mentees' });
-    }
-
-    // Insert the match as pending mentee's acceptance
-    const result = db.prepare(
-        "INSERT INTO matches (mentee_id, mentor_id, status) VALUES (?, ?, 'pending_mentee')"
-    ).run(mentee_id, req.user.id);
-
-    res.json({ success: true, matchId: result.lastInsertRowid });
-});
-
+// Mentee requests a mentor (creates a pending match waiting for mentor to accept)
 app.post('/api/matches/confirm', authenticateToken, (req, res) => {
     const { mentor_id } = req.body;
+
+    if (req.user.role !== 'mentee') {
+        return res.status(403).json({ error: 'Only mentees can send match requests' });
+    }
 
     // Block if mentee already has an active match
     const existing = db.prepare(
@@ -453,27 +455,28 @@ app.post('/api/matches/confirm', authenticateToken, (req, res) => {
     ).get(req.user.id);
     if (existing) return res.status(400).json({ error: 'You already have an active match' });
 
-    // Insert the match as pending (waiting for mentor to accept)
     const result = db.prepare(
         `INSERT INTO matches (mentee_id, mentor_id, status) VALUES (?, ?, 'pending')`
     ).run(req.user.id, mentor_id);
 
-    // Get emails for both parties
     const menteeUser = db.prepare('SELECT email FROM users WHERE id = ?').get(req.user.id);
     const mentorUser = db.prepare('SELECT email FROM users WHERE id = ?').get(mentor_id);
-    const mentorProfile = db.prepare('SELECT linkedin_url FROM mentor_profiles WHERE user_id = ?').get(mentor_id);
-
     const menteeProf = db.prepare('SELECT founders FROM mentee_profiles WHERE user_id = ?').get(req.user.id);
+
     sendMenteeRequestEmail(menteeUser.email, mentorUser.email, menteeProf?.founders || 'A Founder')
-        .catch(err => console.error('Match confirm email failed:', err));
+        .catch(err => console.error('Match request email failed:', err));
 
     res.json({ success: true, matchId: result.lastInsertRowid });
 });
 
+// Mentor accepts a pending match
 app.post('/api/matches/accept', authenticateToken, (req, res) => {
     const { match_id } = req.body;
 
-    // Make sure this match actually belongs to this mentor
+    if (req.user.role !== 'mentor') {
+        return res.status(403).json({ error: 'Only mentors can accept matches' });
+    }
+
     const match = db.prepare(
         `SELECT * FROM matches WHERE id = ? AND mentor_id = ?`
     ).get(match_id, req.user.id);
@@ -483,7 +486,6 @@ app.post('/api/matches/accept', authenticateToken, (req, res) => {
         `UPDATE matches SET status = 'confirmed', confirmed_at = CURRENT_TIMESTAMP WHERE id = ?`
     ).run(match_id);
 
-    // Get mentee email + mentor profile for the email
     const menteeUser = db.prepare('SELECT email FROM users WHERE id = ?').get(match.mentee_id);
     const mentorUser = db.prepare('SELECT name, email FROM users WHERE id = ?').get(req.user.id);
     const mentorProfile = db.prepare('SELECT linkedin_url FROM mentor_profiles WHERE user_id = ?').get(req.user.id);
@@ -498,10 +500,14 @@ app.post('/api/matches/accept', authenticateToken, (req, res) => {
     res.json({ success: true });
 });
 
+// Mentor declines a pending match
 app.post('/api/matches/decline', authenticateToken, (req, res) => {
     const { match_id } = req.body;
 
-    // Make sure this match belongs to this mentor
+    if (req.user.role !== 'mentor') {
+        return res.status(403).json({ error: 'Only mentors can decline matches' });
+    }
+
     const match = db.prepare(
         `SELECT * FROM matches WHERE id = ? AND mentor_id = ?`
     ).get(match_id, req.user.id);
@@ -509,66 +515,13 @@ app.post('/api/matches/decline', authenticateToken, (req, res) => {
 
     db.prepare(`UPDATE matches SET status = 'declined' WHERE id = ?`).run(match_id);
 
-    // Notify the mentee
     const menteeUser = db.prepare('SELECT email FROM users WHERE id = ?').get(match.mentee_id);
-
     sendMentorDeclinedEmail(menteeUser.email)
         .catch(err => console.error('Mentor decline email failed:', err));
 
     res.json({ success: true });
 });
 
-// ---- TEMPORARY TEST ROUTES - DELETE BEFORE PRODUCTION ----
-
-app.get('/api/test/welcome-email', async (req, res) => {
-    try {
-        await sendWelcomeEmail('test@example.com', 'mentor');
-        res.json({ success: true, sent: 'welcome email' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.get('/api/test/match-confirmed-email', async (req, res) => {
-    try {
-        await sendMatchConfirmedEmail('mentee@example.com', 'mentor@example.com', 'John Smith');
-        res.json({ success: true, sent: 'match confirmed email' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.get('/api/test/mentor-accepted-email', async (req, res) => {
-    try {
-        await sendMentorAcceptedEmail('mentee@example.com', 'John Smith', 'john@gmail.com', 'linkedin.com/in/johnsmith');
-        res.json({ success: true, sent: 'mentor accepted email' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.get('/api/test/mentor-declined-email', async (req, res) => {
-    try {
-        await sendMentorDeclinedEmail('mentee@example.com');
-        res.json({ success: true, sent: 'mentor declined email' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.get('/api/test/match-dissolved-email', async (req, res) => {
-    try {
-        await sendMatchDissolvedEmail('user@example.com');
-        res.json({ success: true, sent: 'match dissolved email' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ---- END TEST ROUTES ----
-
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
-
-
