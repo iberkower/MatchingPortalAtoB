@@ -73,36 +73,38 @@
           } catch (e) { }
 
           const card = `
-              <div class="request-card" style="position: relative; margin-bottom: 2rem;">
-                <div class="match-header"
-                  style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
-                  <div class="match-avatar" style="width: 56px; height: 56px; background-color: var(--primary-blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold;">${(confirmedMatch.startup_name || 'A')[0].toUpperCase()}</div>
-                  <div>
-                    <h2 style="font-size: 1.125rem; margin-bottom: 0;">${confirmedMatch.startup_name || 'Anonymous Startup'}</h2>
-                    <span class="text-muted" style="font-size: 0.875rem;">${confirmedMatch.current_stage || 'Unknown stage'}</span>
-                  </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-                  <div>
-                    <div class="match-info-label">Founders</div>
-                    <div class="match-info-value">${confirmedMatch.founders || 'N/A'}</div>
-                  </div>
-                  <div style="grid-column: span 2;">
-                    <div class="match-info-label">Looking For Help With</div>
-                    <div class="match-info-value">${helpAreasStr}</div>
-                  </div>
-                  <div style="grid-column: span 2;">
-                    <div class="match-info-label">Contact / Email</div>
-                    <div class="match-info-value">${confirmedMatch.email || 'N/A'}</div>
-                  </div>
-                </div>
-                
-                <div style="display: flex; gap: 1rem;">
-                  <a href="mentee-details.html?id=${confirmedMatch.id}" class="btn btn-outline" style="flex: 1;">View Full Answers</a>
-                </div>
+            <div style="border: 2px solid #10B981; border-radius: 12px; max-width: 650px; margin: 0 auto; box-shadow: 0 10px 25px rgba(16,185,129,0.1); padding: 3rem 2rem; text-align: center; background: white;">
+              
+              <div style="width: 64px; height: 64px; border-radius: 50%; background-color: #D1FAE5; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
               </div>
-            `;
+
+              <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #10B981;">Mentee Matched!</h2>
+              <p style="color: var(--text-muted); margin-bottom: 2.5rem;">You've accepted this mentee's request. Reach out to them to schedule your first meeting.</p>
+
+              <div style="background-color: #F9FAFB; border-radius: 12px; padding: 2rem; text-align: left;">
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">${confirmedMatch.startup_name || 'Anonymous Startup'}</h3>
+                <span style="color: var(--text-muted); font-size: 0.875rem; display: block; margin-bottom: 1.5rem;">${confirmedMatch.current_stage || 'Unknown stage'}</span>
+                
+                <div class="match-info-section">
+                  <div class="match-info-label">Founders</div>
+                  <div class="match-info-value" style="font-weight: 500;">${confirmedMatch.founders || 'N/A'}</div>
+                </div>
+                <div class="match-info-section">
+                  <div class="match-info-label">Contact Email</div>
+                  <div class="match-info-value" style="font-weight: 500;">${confirmedMatch.email || 'N/A'}</div>
+                </div>
+                <div class="match-info-section">
+                  <div class="match-info-label">Looking For Help With</div>
+                  <div class="match-info-value" style="font-weight: 500;">${helpAreasStr}</div>
+                </div>
+                <a href="mentee-details.html?id=${confirmedMatch.id}" class="btn btn-outline" style="margin-top: 1.5rem; display: inline-block;">View Full Application</a>
+              </div>
+            </div>
+          `;
           container.innerHTML = card;
           return;
         }

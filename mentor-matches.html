@@ -26,7 +26,7 @@
     <div class="matches-grid" id="matches-container">
     </div>
 
-    <div style="max-width: 1100px; margin: 2rem auto; font-size: 0.75rem; color: var(--text-muted);">
+    <div id="disclaimer" style="max-width: 1100px; margin: 2rem auto; font-size: 0.75rem; color: var(--text-muted);">
       * Mentor identities are hidden until you connect. You have 72 hours to select a mentor before new matches are
       generated.
     </div>
@@ -70,6 +70,7 @@
         const activeMatch = data[0].status === 'pending' || data[0].status === 'confirmed';
 
         if (activeMatch) {
+          document.getElementById('disclaimer').style.display = 'none';
           const match = data[0];
           title.textContent = "Your Mentor";
 
