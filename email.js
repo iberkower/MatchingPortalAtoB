@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
 //service: 'gmail',
+//right now the email system works through a system that sends simulated emails with the website mailtrap.io, for real implementation, a more permanents system is required
   host: 'sandbox.smtp.mailtrap.io',
   port: 2525,
   auth: {
