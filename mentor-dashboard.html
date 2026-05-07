@@ -64,7 +64,7 @@
         const confirmedMatch = data.find(m => m.status === 'confirmed');
         if (confirmedMatch) {
           title.textContent = "Your Mentee Match";
-          subtitle.textContent = "You have successfully matched! Please reach out to your mentee to schedule a meeting.";
+          subtitle.textContent = "You have successfully matched! Your contact info has been shared with the mentee so they can reach out, but you can also contact them to schedule your meeting.";
 
           let helpAreasStr = "Mentorship";
           try {
@@ -83,7 +83,7 @@
               </div>
 
               <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #10B981;">Mentee Matched!</h2>
-              <p style="color: var(--text-muted); margin-bottom: 2.5rem;">You've accepted this mentee's request. Reach out to them to schedule your first meeting.</p>
+              <p style="color: var(--text-muted); margin-bottom: 2.5rem;">You've accepted this mentee's request. Your contact information has been shared with them so they can reach out to you, but you may also contact them using the info below.</p>
 
               <div style="background-color: #F9FAFB; border-radius: 12px; padding: 2rem; text-align: left;">
                 <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">${confirmedMatch.startup_name || 'Anonymous Startup'}</h3>

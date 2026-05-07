@@ -98,7 +98,7 @@
                 `;
             container.innerHTML = card;
           } else if (match.status === 'confirmed') {
-            subtitle.textContent = "You have been matched successfully! You will be reached out to by your mentor to schedule your first meeting.";
+            subtitle.textContent = "You have been matched successfully! Please reach out to your mentor to schedule your first meeting.";
 
             const card = `
                   <div class="match-card" style="border: 2px solid #10B981; grid-column: 1 / -1; max-width: 650px; margin: 0 auto; box-shadow: 0 10px 25px rgba(16,185,129,0.1); padding: 3rem 2rem; text-align: center;">
@@ -111,7 +111,7 @@
                     </div>
 
                     <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #10B981;">Match Confirmed!</h2>
-                    <p style="color: var(--text-muted); margin-bottom: 2.5rem;">Your mentor will reach out to you shortly to schedule your first meeting. Keep an eye on your inbox.</p>
+                    <p style="color: var(--text-muted); margin-bottom: 2.5rem;">Please use the contact information below to reach out to your mentor and schedule your first meeting.</p>
 
                     <div style="background-color: #F9FAFB; border-radius: 12px; padding: 2rem; text-align: left;">
                       <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">${match.mentor_name}</h3>

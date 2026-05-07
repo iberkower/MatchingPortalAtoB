@@ -86,6 +86,7 @@ db.exec(`
 
 try { db.exec('ALTER TABLE mentor_profiles ADD COLUMN full_name TEXT'); } catch (e) { }
 try { db.exec('ALTER TABLE mentor_profiles ADD COLUMN email TEXT'); } catch (e) { }
+try { db.exec('ALTER TABLE users ADD COLUMN name TEXT'); } catch (e) { }
 
 // Auth Middleware
 const authenticateToken = (req, res, next) => {
@@ -109,9 +110,17 @@ app.post('/api/signup', async (req, res) => {
 
     try {
         const result = db.prepare('INSERT INTO users (email, password, role, name) VALUES (?, ?, ?, ?)').run(email, hashedPassword, role, fullname);
-        const token = jwt.sign({ id: result.lastInsertRowid, email, role }, SECRET_KEY);
+        const userId = result.lastInsertRowid;
+
+        if (role === 'mentor') {
+            try { db.prepare('INSERT INTO mentor_profiles (user_id, full_name, email) VALUES (?, ?, ?)').run(userId, fullname, email); } catch (e) { }
+        } else {
+            try { db.prepare('INSERT INTO mentee_profiles (user_id, founders) VALUES (?, ?)').run(userId, fullname); } catch (e) { }
+        }
+
+        const token = jwt.sign({ id: userId, email, role }, SECRET_KEY);
         sendWelcomeEmail(email, role).catch(err => console.error('Welcome email failed:', err));
-        res.json({ token, role, userId: result.lastInsertRowid });
+        res.json({ token, role, userId });
     } catch (err) {
         if (err.message.includes('UNIQUE constraint failed')) {
             return res.status(400).json({ error: 'Email already exists' });
@@ -138,8 +147,8 @@ app.post('/api/profile/mentor', authenticateToken, (req, res) => {
     const profile = req.body;
     db.prepare(`
         INSERT OR REPLACE INTO mentor_profiles 
-        (user_id, phone, city, current_role, company, linkedin_url, is_alumni, mentored_previously, past_startups, interests, is_angel, help_areas, domains, effective_stages, engagement_modes, commitment, feedback)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (user_id, phone, city, current_role, company, linkedin_url, is_alumni, mentored_previously, past_startups, interests, is_angel, help_areas, domains, effective_stages, engagement_modes, commitment, feedback, full_name, email)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
         req.user.id,
         profile.phone,
@@ -157,7 +166,9 @@ app.post('/api/profile/mentor', authenticateToken, (req, res) => {
         JSON.stringify(profile.effective_stages),
         JSON.stringify(profile.engagement_modes),
         profile.commitment,
-        profile.feedback
+        profile.feedback,
+        profile.full_name || null,
+        profile.email || null
     );
 
     res.json({ success: true });
@@ -248,6 +259,91 @@ app.post('/api/profile/update', authenticateToken, async (req, res) => {
     }
 });
 
+// --- ADMIN ENDPOINTS ---
+const authenticateAdmin = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+        if (user.role !== 'admin') return res.sendStatus(403);
+        req.user = user;
+        next();
+    });
+};
+
+app.get('/api/admin/users', authenticateAdmin, (req, res) => {
+    const mentees = db.prepare(`
+        SELECT u.id, COALESCE(u.name, mp.founders) as name, u.email, u.created_at, mp.startup_name, mp.current_stage 
+        FROM users u 
+        LEFT JOIN mentee_profiles mp ON u.id = mp.user_id 
+        WHERE u.role = 'mentee'
+    `).all();
+
+    const mentors = db.prepare(`
+        SELECT u.id, COALESCE(u.name, mp.full_name) as name, u.email, u.created_at, mp.company, mp.current_role 
+        FROM users u 
+        LEFT JOIN mentor_profiles mp ON u.id = mp.user_id 
+        WHERE u.role = 'mentor'
+    `).all();
+
+    const matches = db.prepare('SELECT * FROM matches').all();
+
+    res.json({ mentees, mentors, matches });
+});
+
+app.get('/api/admin/user/:id', authenticateAdmin, (req, res) => {
+    const user = db.prepare('SELECT id, email, role, name, created_at FROM users WHERE id = ?').get(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    let profile = null;
+    if (user.role === 'mentor') {
+        profile = db.prepare('SELECT * FROM mentor_profiles WHERE user_id = ?').get(user.id);
+    } else if (user.role === 'mentee') {
+        profile = db.prepare('SELECT * FROM mentee_profiles WHERE user_id = ?').get(user.id);
+    }
+    res.json({ user, profile });
+});
+
+app.post('/api/admin/match', authenticateAdmin, (req, res) => {
+    const { mentee_id, mentor_id } = req.body;
+
+    db.prepare("UPDATE matches SET status = 'dissolved' WHERE mentee_id = ?").run(mentee_id);
+
+    db.prepare("INSERT INTO matches (mentee_id, mentor_id, status, confirmed_at) VALUES (?, ?, 'confirmed', CURRENT_TIMESTAMP)").run(mentee_id, mentor_id);
+
+    // Send emails
+    const menteeUser = db.prepare('SELECT email, name FROM users WHERE id = ?').get(mentee_id);
+    const menteeProfile = db.prepare('SELECT founders FROM mentee_profiles WHERE user_id = ?').get(mentee_id);
+    const menteeName = menteeProfile?.founders || menteeUser?.name || 'A Mentee';
+
+    const mentorUser = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(mentor_id);
+    const mentorProfile = db.prepare('SELECT full_name FROM mentor_profiles WHERE user_id = ?').get(mentor_id);
+    const mentorName = mentorProfile?.full_name || mentorUser?.name || 'Your Mentor';
+
+    const { sendAdminMatchEmail } = require('./email');
+    sendAdminMatchEmail(menteeUser.email, mentorUser.email, menteeName, mentorName)
+        .catch(err => console.error('Admin match email failed:', err));
+
+    res.json({ success: true });
+});
+
+app.delete('/api/admin/user/:id', authenticateAdmin, (req, res) => {
+    const userId = req.params.id;
+    if (req.user.id == userId) return res.status(400).json({ error: 'Cannot delete own account' });
+
+    db.transaction(() => {
+        db.prepare('DELETE FROM matches WHERE mentee_id = ? OR mentor_id = ?').run(userId, userId);
+        db.prepare('DELETE FROM mentor_profiles WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM mentee_profiles WHERE user_id = ?').run(userId);
+        db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+    })();
+
+    res.json({ success: true });
+});
+// ------------------------
+
 const STAGE_MAPPING = {
     "Ideation (problem & customer still being validated)": ["Ideation / pre-MVP"],
     "MVP built, no real users yet": ["MVP / Early users", "Ideation / pre-MVP"],
@@ -333,11 +429,12 @@ app.get('/api/matches', authenticateToken, (req, res) => {
         // First, check if there's an active or pending match for this mentee
         const activeMatch = db.prepare(`
             SELECT m.*, mp.company, mp.current_role, mp.help_areas, mp.domains, mp.past_startups, mp.phone, mp.linkedin_url,
-               u.name as mentor_name, u.email
+               COALESCE(u.name, mp.full_name) as mentor_name, u.email
             FROM matches m
             JOIN mentor_profiles mp ON m.mentor_id = mp.user_id
             JOIN users u ON m.mentor_id = u.id
             WHERE m.mentee_id = ? AND m.status IN ('pending', 'confirmed')
+            ORDER BY CASE m.status WHEN 'confirmed' THEN 1 ELSE 2 END ASC
         `).get(req.user.id);
 
         if (activeMatch) {

@@ -66,10 +66,16 @@
                     const { user, profile } = data;
 
                     document.getElementById('email').value = user.email;
-                    document.getElementById('backBtn').href = user.role === 'mentor' ? 'mentor-dashboard.html' : 'mentor-matches.html';
+                    if (user.role === 'admin') {
+                        document.getElementById('backBtn').href = 'admin-dashboard.html';
+                    } else {
+                        document.getElementById('backBtn').href = user.role === 'mentor' ? 'mentor-dashboard.html' : 'mentor-matches.html';
+                    }
 
                     const container = document.getElementById('dynamicFields');
-                    if (user.role === 'mentor') {
+                    if (user.role === 'admin') {
+                        container.innerHTML = '';
+                    } else if (user.role === 'mentor') {
                         renderMentorFields(container, profile, user);
                     } else {
                         renderMenteeFields(container, profile);
@@ -86,7 +92,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Full Name</label>
-                    <input type="text" id="full_name" class="form-control" value="${user?.name || ''}">
+                    <input type="text" id="full_name" class="form-control" value="${user?.name || profile?.full_name || ''}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Current Role</label>
@@ -161,8 +167,9 @@
                 });
 
                 if (response.ok) {
-
-                    const role = localStorage.getItem('atobeRole'); window.location.href = role === 'mentor' ? 'mentor-dashboard.html' : 'mentor-matches.html';
+                    const role = localStorage.getItem('atobeRole');
+                    if (role === 'admin') window.location.href = 'admin-dashboard.html';
+                    else window.location.href = role === 'mentor' ? 'mentor-dashboard.html' : 'mentor-matches.html';
                 } else {
                     alert('Failed to update profile');
                 }

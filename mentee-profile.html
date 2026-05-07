@@ -162,6 +162,18 @@
     </div>
   </main>
   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const userStr = localStorage.getItem('atobeUser');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          if (user.fullname) {
+            document.getElementById('founders').value = user.fullname;
+          }
+        } catch (e) { }
+      }
+    });
+
     document.querySelector('form').addEventListener('submit', async function (e) {
       e.preventDefault();
 

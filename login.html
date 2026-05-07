@@ -56,7 +56,9 @@
                 localStorage.setItem('atobeRole', result.role);
                 localStorage.setItem('atobeUser', JSON.stringify({ email, role: result.role }));
 
-                if (result.role === 'mentor') {
+                if (result.role === 'admin') {
+                  window.location.href = 'admin-dashboard.html';
+                } else if (result.role === 'mentor') {
                   window.location.href = 'mentor-dashboard.html';
                 } else {
                   window.location.href = 'mentor-matches.html';

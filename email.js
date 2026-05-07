@@ -1,10 +1,7 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-//service: 'gmail',
-//right now the email system works through a system that sends simulated emails with the website mailtrap.io, for real implementation, a more permanents system is required
-  host: 'sandbox.smtp.mailtrap.io',
-  port: 2525,
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -39,7 +36,7 @@ async function sendMatchConfirmedEmail(menteeEmail, mentorEmail, mentorName) {
     html: `
       <h2>Match Confirmed 🎉</h2>
       <p>You've been matched with <strong>${mentorName}</strong>.</p>
-      <p>Your mentor will reach out to schedule your first meeting. Keep an eye on your inbox!</p>
+      <p>Please reach out to your mentor to schedule your first meeting using the contact information on your dashboard.</p>
     `,
   });
 
@@ -58,6 +55,34 @@ async function sendMatchConfirmedEmail(menteeEmail, mentorEmail, mentorName) {
   });
 }
 
+async function sendAdminMatchEmail(menteeEmail, mentorEmail, menteeName, mentorName) {
+  // Email to mentee
+  await transporter.sendMail({
+    from: `"AtoBe Startups" <${process.env.EMAIL_USER}>`,
+    to: menteeEmail,
+    subject: "You've been paired with a mentor!",
+    html: `
+      <h2>Match Confirmed 🎉</h2>
+      <p>The AtoBe admin team has matched you with <strong>${mentorName}</strong>.</p>
+      <p>Please reach out to your mentor to schedule your first meeting using the contact information on your dashboard.</p>
+    `,
+  });
+
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Email to mentor
+  await transporter.sendMail({
+    from: `"AtoBe Startups" <${process.env.EMAIL_USER}>`,
+    to: mentorEmail,
+    subject: 'You have been paired with a mentee!',
+    html: `
+      <h2>You have a new mentee!</h2>
+      <p>The AtoBe admin team has paired you with <strong>${menteeName}</strong>.</p>
+      <p>Please log in to your dashboard to view their profile, as they will be reaching out to you soon.</p>
+    `,
+  });
+}
+
 // Sent to mentee when mentor accepts
 async function sendMentorAcceptedEmail(menteeEmail, mentorName, mentorEmail, mentorLinkedin) {
   await transporter.sendMail({
@@ -67,7 +92,7 @@ async function sendMentorAcceptedEmail(menteeEmail, mentorName, mentorEmail, men
     html: `
       <h2>Your mentor accepted! 🙌</h2>
       <p><strong>${mentorName}</strong> has accepted your connection request.</p>
-      <p>They will reach out to schedule your first meeting:</p>
+      <p>Please reach out to them to schedule your first meeting using the following information:</p>
       <ul>
         <li>Email: <a href="mailto:${mentorEmail}">${mentorEmail}</a></li>
         ${mentorLinkedin ? `<li>LinkedIn: <a href="${mentorLinkedin}">${mentorLinkedin}</a></li>` : ''}
@@ -141,4 +166,5 @@ module.exports = {
   sendMentorAcceptedEmail,
   sendMentorDeclinedEmail,
   sendMatchDissolvedEmail,
+  sendAdminMatchEmail,
 };

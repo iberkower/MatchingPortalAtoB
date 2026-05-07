@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AtoBe Startups - Admin Overview</title>
+  <link rel="stylesheet" href="index.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .admin-main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-table th {
+      background-color: #F9FAFB;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .data-table tr:hover {
+      background-color: #F3F4F6;
+      cursor: pointer;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-matched {
+      background-color: #D1FAE5;
+      color: #065F46;
+    }
+
+    .status-pending {
+      background-color: #FEF3C7;
+      color: #92400E;
+    }
+
+    .status-unmatched {
+      background-color: #F3F4F6;
+      color: #374151;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .info-row {
+      margin-bottom: 1rem;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+      font-size: 1rem;
+      color: var(--text-dark);
+    }
+  </style>
+</head>
+
+<body style="min-height: 100vh; background-color: var(--bg-color);">
+  <header class="dashboard-header">
+    <a href="index.html" class="logo">AtoBe Startups (Admin)</a>
+    <div class="user-profile-nav">
+      First name Last name <span class="avatar-icon"></span>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <h1 style="font-size: 2rem; margin-bottom: 2rem;">System Overview</h1>
+
+    <div style="display: flex; gap: 2rem; margin-bottom: 3rem; flex-wrap: wrap;">
+      <div class="card" style="flex: 1; max-width: 400px; min-width: 300px;">
+        <h2 style="font-size: 1.25rem; margin-bottom: 1.5rem;">Network Status</h2>
+        <canvas id="overviewChart"></canvas>
+      </div>
+
+      <div class="card" style="flex: 2; min-width: 300px;">
+        <h2 style="font-size: 1.25rem; margin-bottom: 1.5rem;">Manual Match Override</h2>
+        <p class="text-muted" style="margin-bottom: 1.5rem;">Force a match between a Mentee and a Mentor. This bypasses
+          the typical request flow and locks them in instantly.</p>
+
+        <form id="manualMatchForm" style="display: flex; gap: 1rem; align-items: flex-end;">
+          <div style="flex: 1;">
+            <label class="form-label">Mentee</label>
+            <select id="manualMentee" class="form-control" required></select>
+          </div>
+          <div style="flex: 1;">
+            <label class="form-label">Mentor</label>
+            <select id="manualMentor" class="form-control" required></select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-bottom: 4px;">Confirm Match</button>
+        </form>
+      </div>
+    </div>
+
+    <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Mentees (Startup Founders)</h2>
+    <table class="data-table" id="mentee-table">
+      <thead>
+        <tr>
+          <th>Name / Startup</th>
+          <th>Email</th>
+          <th>Stage</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2 style="font-size: 1.5rem; margin-bottom: 1rem; margin-top: 3rem;">Mentors</h2>
+    <table class="data-table" id="mentor-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Company / Role</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+
+  <!-- User Details Modal -->
+  <div class="modal-overlay" id="detailsModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2 id="modal-title" style="margin-bottom: 1.5rem; font-size: 1.5rem;">User Details</h2>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="auth-shared.js"></script>
+  <script>
+    let globalMatches = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const token = localStorage.getItem('atobeToken');
+      if (!token) { window.location.href = 'login.html'; return; }
+
+      try {
+        const response = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!response.ok) throw new Error('Unauth');
+        const data = await response.json();
+
+        globalMatches = data.matches;
+        renderDashboard(data);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
+    function getStatusForUser(id, role, data) {
+      if (role === 'mentee') {
+        const confirmed = globalMatches.find(m => m.mentee_id === id && m.status === 'confirmed');
+        if (confirmed) {
+          const matchName = data.mentors.find(m => m.id === confirmed.mentor_id)?.name || 'ID ' + confirmed.mentor_id;
+          return { text: 'Matched with ' + matchName, class: 'status-matched' };
+        }
+
+        const pending = globalMatches.find(m => m.mentee_id === id && m.status === 'pending');
+        if (pending) return { text: 'Requested, Waiting (Mentee initiated)', class: 'status-pending' };
+
+        const pendingMentee = globalMatches.find(m => m.mentee_id === id && m.status === 'pending_mentee');
+        if (pendingMentee) return { text: 'Requested for Match, Awaiting Mentee', class: 'status-pending' };
+
+        return { text: 'Unmatched', class: 'status-unmatched' };
+      } else {
+        const confirmed = globalMatches.filter(m => m.mentor_id === id && m.status === 'confirmed');
+        if (confirmed.length > 0) {
+          const matchNames = confirmed.map(c => data.mentees.find(m => m.id === c.mentee_id)?.name || 'ID ' + c.mentee_id).join(', ');
+          return { text: `Matched with: ${matchNames}`, class: 'status-matched' };
+        }
+
+        const pendingMentee = globalMatches.find(m => m.mentor_id === id && m.status === 'pending_mentee');
+        if (pendingMentee) return { text: 'Requested Mentee, Waiting', class: 'status-pending' };
+
+        const pending = globalMatches.filter(m => m.mentor_id === id && m.status === 'pending');
+        if (pending.length > 0) return { text: `${pending.length} Request(s) Pending Review`, class: 'status-pending' };
+
+        return { text: 'Unmatched', class: 'status-unmatched' };
+      }
+    }
+
+    function renderDashboard(data) {
+      const menteeTbody = document.querySelector('#mentee-table tbody');
+      const menteeSelect = document.getElementById('manualMentee');
+      let menteeMatched = 0, menteePending = 0, menteeUnmatched = 0;
+
+      menteeSelect.innerHTML = '<option value="">Select a Mentee</option>';
+      data.mentees.forEach(m => {
+        const st = getStatusForUser(m.id, 'mentee', data);
+        if (st.text.includes('Matched')) menteeMatched++;
+        else if (st.text.includes('Waiting') || st.text.includes('Awaiting')) menteePending++;
+        else menteeUnmatched++;
+
+        const tr = document.createElement('tr');
+        tr.onclick = () => viewUser(m.id);
+        tr.innerHTML = `
+          <td><strong>${m.name || 'No Name'}</strong><br><span class="text-muted" style="font-size: 0.875rem;">${m.startup_name || 'No startup info'}</span></td>
+          <td>${m.email}</td>
+          <td>${m.current_stage || '-'}</td>
+          <td><span class="status-badge ${st.class}">${st.text}</span></td>
+        `;
+        menteeTbody.appendChild(tr);
+
+        if (!st.text.includes('Matched')) {
+          menteeSelect.innerHTML += `<option value="${m.id}">${m.name} (${m.startup_name})</option>`;
+        }
+      });
+
+      const mentorTbody = document.querySelector('#mentor-table tbody');
+      const mentorSelect = document.getElementById('manualMentor');
+
+      mentorSelect.innerHTML = '<option value="">Select a Mentor</option>';
+      data.mentors.forEach(m => {
+        const st = getStatusForUser(m.id, 'mentor', data);
+
+        const tr = document.createElement('tr');
+        tr.onclick = () => viewUser(m.id);
+        tr.innerHTML = `
+          <td><strong>${m.name || 'No Name'}</strong></td>
+          <td>${m.email}</td>
+          <td>${m.current_role ? m.current_role + ' at ' + m.company : '-'}</td>
+          <td><span class="status-badge ${st.class}">${st.text}</span></td>
+        `;
+        mentorTbody.appendChild(tr);
+        mentorSelect.innerHTML += `<option value="${m.id}">${m.name} (${m.company || 'Mentor'})</option>`;
+      });
+
+      // Render Chart
+      new Chart(document.getElementById('overviewChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Matched Mentees', 'Pending Mentee Requests', 'Unmatched Mentees'],
+          datasets: [{
+            data: [menteeMatched, menteePending, menteeUnmatched],
+            backgroundColor: ['#10B981', '#F59E0B', '#E5E7EB'],
+            borderWidth: 0
+          }]
+        },
+        options: { cutout: '70%', responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    async function viewUser(userId) {
+      document.getElementById('detailsModal').style.display = 'flex';
+      document.getElementById('modal-body').innerHTML = '<p>Loading...</p>';
+
+      const token = localStorage.getItem('atobeToken');
+      try {
+        const res = await fetch('/api/admin/user/' + userId, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+
+        document.getElementById('modal-title').textContent = (data.user.name || 'User') + " (" + data.user.role + ")";
+
+        let html = '';
+        if (data.profile) {
+          for (let key in data.profile) {
+            if (key === 'user_id' || !data.profile[key]) continue;
+            let val = data.profile[key];
+            try { val = JSON.parse(val).join(', '); } catch (e) { }
+            html += `
+                  <div class="info-row">
+                    <div class="info-label">${key.replace(/_/g, ' ')}</div>
+                    <div class="info-value">${val}</div>
+                  </div>
+                `;
+          }
+        } else {
+          html = '<p>User has not filled out their profile form yet.</p>';
+        }
+        html += `
+          <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+            <button onclick="deleteUser(${userId})" class="btn btn-outline" style="border-color: #EF4444; color: #EF4444;">Delete Account</button>
+          </div>
+        `;
+        document.getElementById('modal-body').innerHTML = html;
+
+      } catch (err) {
+        document.getElementById('modal-body').innerHTML = '<p style="color:red;">Error loading details</p>';
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm('Are you strictly sure you want to permanently delete this user account? All their data and active match requests will be erased.')) return;
+
+      const token = localStorage.getItem('atobeToken');
+      try {
+        const res = await fetch('/api/admin/user/' + userId, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          const err = await res.json();
+          alert(err.error || 'Failed to delete account');
+        }
+      } catch (err) {
+        alert('Server error while deleting account');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('detailsModal').style.display = 'none';
+    }
+
+    document.getElementById('manualMatchForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const mentee_id = document.getElementById('manualMentee').value;
+      const mentor_id = document.getElementById('manualMentor').value;
+      if (!mentee_id || !mentor_id) return;
+
+      const token = localStorage.getItem('atobeToken');
+      try {
+        const res = await fetch('/api/admin/match', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ mentee_id, mentor_id })
+        });
+        if (res.ok) window.location.reload();
+        else alert('Match failed');
+      } catch (e) { }
+    });
+  </script>
+</body>
+
+</html>

@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!token) {
         // Only redirect if we are on a protected page
-        const protectedPages = ['mentor-dashboard.html', 'mentor-matches.html', 'mentor-profile.html', 'mentee-profile.html', 'profile-settings.html'];
+        const protectedPages = ['admin-dashboard.html', 'mentor-dashboard.html', 'mentor-matches.html', 'mentor-profile.html', 'mentee-profile.html', 'profile-settings.html'];
         const currentPage = window.location.pathname.split('/').pop();
         if (protectedPages.includes(currentPage)) {
             window.location.href = 'login.html';
@@ -15,7 +15,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Update Logo Link to Dashboard
     const logoLink = document.querySelector('.logo');
     if (logoLink) {
-        logoLink.href = role === 'mentor' ? 'mentor-dashboard.html' : 'mentor-matches.html';
+        if (role === 'admin') logoLink.href = 'admin-dashboard.html';
+        else if (role === 'mentor') logoLink.href = 'mentor-dashboard.html';
+        else logoLink.href = 'mentor-matches.html';
     }
 
     const navContainer = document.querySelector('.user-profile-nav');
@@ -26,9 +28,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (response.ok) {
                 const data = await response.json();
-                const displayName = data.user.name || 'User';
+
+                const currentPage = window.location.pathname.split('/').pop();
+                if (!data.profile && (currentPage === 'mentor-dashboard.html' || currentPage === 'mentor-matches.html')) {
+                    window.location.href = role === 'mentor' ? 'mentor-profile.html' : 'mentee-profile.html';
+                    return;
+                }
+
+                let displayName = data.user.name;
+                if (!displayName && data.profile) {
+                    displayName = role === 'mentor' ? data.profile.full_name : data.profile.founders;
+                }
+                displayName = displayName || 'User';
+
                 const initials = displayName.split(' ').filter(Boolean)
-                    .map(w => w[0]).slice(0, 2).join('');
+                    .map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
 
                 navContainer.innerHTML = `
