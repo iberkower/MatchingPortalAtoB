@@ -88,6 +88,18 @@ try { db.exec('ALTER TABLE mentor_profiles ADD COLUMN full_name TEXT'); } catch 
 try { db.exec('ALTER TABLE mentor_profiles ADD COLUMN email TEXT'); } catch (e) { }
 try { db.exec('ALTER TABLE users ADD COLUMN name TEXT'); } catch (e) { }
 
+// Auto-seed Admin Account for fresh deployments (like Render)
+try {
+    const adminEmail = 'admin@atobe.com';
+    const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
+    if (!existingAdmin) {
+        const adminPwd = bcrypt.hashSync('admin123', 10);
+        db.prepare('INSERT INTO users (email, password, role, name) VALUES (?, ?, ?, ?)').run(adminEmail, adminPwd, 'admin', 'Admin');
+    }
+} catch (e) {
+    console.error('Failed to seed admin', e);
+}
+
 // Auth Middleware
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
