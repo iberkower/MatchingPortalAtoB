@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 90" width="280" height="90">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&amp;family=Outfit:wght@400;500;600;700&amp;display=swap');
+      .brand-text {
+        font-family: 'Montserrat', 'Inter', sans-serif;
+        font-weight: 800;
+        font-size: 54px;
+        letter-spacing: -1.5px;
+      }
+      .tagline-text {
+        font-family: 'Outfit', 'Inter', sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        letter-spacing: 0.5px;
+      }
+    </style>
+  </defs>
+  
+  <!-- Red dot before A -->
+  <circle cx="16" cy="48" r="7" fill="#E52B35" />
+  
+  <!-- AtoBe Text -->
+  <text x="32" y="52" class="brand-text">
+    <tspan fill="#111827">A</tspan><tspan fill="#E52B35">to</tspan><tspan fill="#111827">Be</tspan>
+  </text>
+  
+  <!-- Red dot after e -->
+  <circle cx="218" cy="48" r="7" fill="#E52B35" />
+  
+  <!-- Tagline: Engineer your dreams -->
+  <text x="24" y="80" fill="#111827" class="tagline-text">Engineer your dreams</text>
+</svg>

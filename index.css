@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --primary-blue: #3264F6;
-  --bg-color: #F0F4FA;
+  --primary-blue: #E52B35;
+  --bg-color: #FCF9F9;
   --bg-white: #FFFFFF;
   --text-dark: #1F2937;
   --text-muted: #6B7280;
-  --border-color: #E5E7EB;
-  --input-focus: #3264F6;
+  --border-color: #F3E8E8;
+  --input-focus: #E52B35;
   --font-family: 'Inter', sans-serif;
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -74,11 +74,21 @@ h3 {
   background-color: var(--bg-white);
 }
 
-.navbar .logo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--primary-blue);
+.logo {
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.logo:hover {
+  opacity: 0.85;
+  text-decoration: none;
+}
+
+.logo img {
+  height: 48px;
+  display: block;
 }
 
 .navbar .nav-links {
@@ -116,7 +126,7 @@ h3 {
 }
 
 .btn-primary:hover {
-  background-color: #254EDF;
+  background-color: #D32F2F;
   text-decoration: none;
   color: #FFFFFF;
 }
@@ -128,7 +138,7 @@ h3 {
 }
 
 .btn-outline:hover {
-  background-color: #F0F4FF;
+  background-color: #FFF1F2;
   text-decoration: none;
 }
 
@@ -222,7 +232,7 @@ h3 {
 .form-control:focus {
   outline: none;
   border-color: var(--input-focus);
-  box-shadow: 0 0 0 3px rgba(50, 100, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(229, 43, 53, 0.1);
   background-color: #FFFFFF;
 }
 
@@ -342,7 +352,7 @@ textarea.form-control {
 }
 
 .pill.active {
-  background-color: #EEF2FF;
+  background-color: #FFF1F2;
   border-color: var(--primary-blue);
   color: var(--primary-blue);
 }
@@ -504,7 +514,7 @@ textarea.form-control {
   position: absolute;
   top: 1.5rem;
   right: 1.5rem;
-  background-color: #EEF2FF;
+  background-color: #FFF1F2;
   color: var(--primary-blue);
   padding: 0.25rem 0.75rem;
   border-radius: 999px;

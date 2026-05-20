@@ -35,7 +35,7 @@
 <body class="setup-layout">
 
   <header class="setup-header">
-    <a href="index.html" class="logo">AtoBe Startups</a>
+    <a href="index.html" class="logo"><img src="logo.svg" alt="AtoBe Startups"></a>
     <div class="step-indicator">Step 2 of 2 &mdash; Mentor Onboarding</div>
   </header>
 
@@ -45,6 +45,11 @@
       <p class="card-subtitle">Please complete the form below to help us match you with the most relevant startup
         founders.</p>
 
+      <div class="atobe-description-box" style="margin-bottom: 2.5rem; padding: 1.5rem; background-color: #FFF1F2; border-left: 4px solid var(--primary-blue); border-radius: var(--radius-md); font-size: 0.9rem; color: var(--text-dark); line-height: 1.6; box-shadow: var(--shadow-sm);">
+        <strong style="color: var(--primary-blue); display: block; margin-bottom: 0.5rem; font-size: 1rem;">About AtoBe</strong>
+        AtoBe is the premier startup accelerator of the Azrieli College of Engineering. We support early-stage founders and student entrepreneurs in turning engineering and technology-driven ideas into viable, growing businesses. By joining as a mentor, you help guide these startups from concept (A) to market reality (B).
+      </div>
+
       <form action="mentor-dashboard.html">
 
         <!-- Section 1: Contact Information -->
@@ -52,15 +57,15 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="phone">1. Phone Number</label>
-            <input type="tel" id="phone" class="form-control" placeholder="+1 (555) 000-0000" required>
+            <input type="tel" id="phone" class="form-control" placeholder="+1 (555) 000-0000">
           </div>
           <div class="form-group">
             <label class="form-label" for="city">2. City</label>
-            <input type="text" id="city" class="form-control" placeholder="e.g. New York, NY" required>
+            <input type="text" id="city" class="form-control" placeholder="e.g. New York, NY">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="linkedin">3. LinkedIn URL</label>
+          <label class="form-label" for="linkedin">3. LinkedIn URL <span style="color: #ef4444;">*</span></label>
           <input type="url" id="linkedin" class="form-control" placeholder="https://linkedin.com/in/yourprofile"
             required>
         </div>
@@ -69,11 +74,11 @@
         <h2 class="section-title">Professional Background</h2>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="role">4. Current Role</label>
+            <label class="form-label" for="role">4. Current Role <span style="color: #ef4444;">*</span></label>
             <input type="text" id="role" class="form-control" placeholder="e.g. CEO, Head of Product" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="company">5. Company</label>
+            <label class="form-label" for="company">5. Company <span style="color: #ef4444;">*</span></label>
             <input type="text" id="company" class="form-control" placeholder="Company Name" required>
           </div>
         </div>
